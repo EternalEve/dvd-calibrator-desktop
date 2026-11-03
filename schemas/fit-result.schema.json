@@ -1,0 +1,117 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer"
+    },
+    "recordType": {
+      "type": "string"
+    },
+    "snapshotSha256": {
+      "type": "string"
+    },
+    "observationsSha256": {
+      "type": "string"
+    },
+    "algorithmVersion": {
+      "type": "string"
+    },
+    "qualityStatus": {
+      "type": "string"
+    },
+    "physicalValidation": {
+      "type": "string"
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "innerRadiusMm": {
+                "type": "number"
+              },
+              "outerRadiusMm": {
+                "type": "number"
+              },
+              "totalSectors": {
+                "type": "integer"
+              },
+              "channelBitLengthNm": {
+                "type": "number"
+              },
+              "pitchLinear": {
+                "type": "number"
+              },
+              "pitchQuadratic": {
+                "type": "number"
+              },
+              "pitchCubic": {
+                "type": "number"
+              },
+              "direction": {
+                "enum": [
+                  "cw",
+                  "ccw"
+                ]
+              },
+              "directionConvention": {
+                "type": "string"
+              },
+              "startLba": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "innerRadiusMm",
+              "outerRadiusMm",
+              "totalSectors",
+              "channelBitLengthNm",
+              "pitchLinear",
+              "pitchQuadratic",
+              "pitchCubic",
+              "direction",
+              "directionConvention",
+              "startLba"
+            ],
+            "additionalProperties": false
+          },
+          "rmsErrorMm": {
+            "type": "number"
+          },
+          "maxErrorMm": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "parameters",
+          "rmsErrorMm",
+          "maxErrorMm"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "snapshotSha256",
+    "observationsSha256",
+    "algorithmVersion",
+    "qualityStatus",
+    "physicalValidation",
+    "candidates"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:fit-result:v1"
+}

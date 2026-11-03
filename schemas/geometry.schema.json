@@ -1,0 +1,53 @@
+{
+  "type": "object",
+  "properties": {
+    "innerRadiusMm": {
+      "type": "number"
+    },
+    "outerRadiusMm": {
+      "type": "number"
+    },
+    "totalSectors": {
+      "type": "integer"
+    },
+    "channelBitLengthNm": {
+      "type": "number"
+    },
+    "pitchLinear": {
+      "type": "number"
+    },
+    "pitchQuadratic": {
+      "type": "number"
+    },
+    "pitchCubic": {
+      "type": "number"
+    },
+    "direction": {
+      "enum": [
+        "cw",
+        "ccw"
+      ]
+    },
+    "directionConvention": {
+      "type": "string"
+    },
+    "startLba": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "innerRadiusMm",
+    "outerRadiusMm",
+    "totalSectors",
+    "channelBitLengthNm",
+    "pitchLinear",
+    "pitchQuadratic",
+    "pitchCubic",
+    "direction",
+    "directionConvention",
+    "startLba"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:geometry:v1"
+}

@@ -1,0 +1,102 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer"
+    },
+    "recordType": {
+      "type": "string"
+    },
+    "snapshotId": {
+      "type": "string"
+    },
+    "snapshotSha256": {
+      "type": "string"
+    },
+    "photoSha256": {
+      "type": "string"
+    },
+    "photoFile": {
+      "type": "string"
+    },
+    "orientedWidth": {
+      "type": "integer"
+    },
+    "orientedHeight": {
+      "type": "integer"
+    },
+    "appliedExifOrientation": {
+      "type": "integer"
+    },
+    "outerBoundary": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "holeBoundary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/properties/outerBoundary/items"
+      }
+    },
+    "traces": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/properties/outerBoundary/items"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "points"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "snapshotId",
+    "snapshotSha256",
+    "photoSha256",
+    "photoFile",
+    "orientedWidth",
+    "orientedHeight",
+    "appliedExifOrientation",
+    "outerBoundary",
+    "holeBoundary",
+    "traces"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:observations:v1"
+}

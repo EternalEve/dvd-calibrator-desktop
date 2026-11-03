@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <Compile Include="../../third_party/DiscImageStudio/DvdTrackGeometry.cs" Link="Upstream/DvdTrackGeometry.cs" />
+  </ItemGroup>
+</Project>

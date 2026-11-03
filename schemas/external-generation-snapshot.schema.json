@@ -1,0 +1,200 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer"
+    },
+    "recordType": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "generationRecord": {
+      "type": "object",
+      "properties": {
+        "recordType": {
+          "type": "string"
+        },
+        "adapterVersion": {
+          "type": "string"
+        },
+        "sourceSha256": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "object",
+          "properties": {
+            "innerRadiusMm": {
+              "type": "number"
+            },
+            "outerRadiusMm": {
+              "type": "number"
+            },
+            "totalSectors": {
+              "type": "integer"
+            },
+            "channelBitLengthNm": {
+              "type": "number"
+            },
+            "pitchLinear": {
+              "type": "number"
+            },
+            "pitchQuadratic": {
+              "type": "number"
+            },
+            "pitchCubic": {
+              "type": "number"
+            },
+            "direction": {
+              "enum": [
+                "cw",
+                "ccw"
+              ]
+            },
+            "directionConvention": {
+              "type": "string"
+            },
+            "startLba": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "innerRadiusMm",
+            "outerRadiusMm",
+            "totalSectors",
+            "channelBitLengthNm",
+            "pitchLinear",
+            "pitchQuadratic",
+            "pitchCubic",
+            "direction",
+            "directionConvention",
+            "startLba"
+          ],
+          "additionalProperties": false
+        },
+        "startAngleDegrees": {
+          "type": "number"
+        },
+        "luminanceThreshold": {
+          "type": "integer"
+        },
+        "alphaThreshold": {
+          "type": "integer"
+        },
+        "originalRecord": true,
+        "qualityStatus": {
+          "type": "string"
+        },
+        "missingEvidence": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "required": [
+        "recordType",
+        "adapterVersion",
+        "sourceSha256",
+        "generated",
+        "startAngleDegrees",
+        "luminanceThreshold",
+        "alphaThreshold",
+        "originalRecord",
+        "qualityStatus",
+        "missingEvidence"
+      ],
+      "additionalProperties": false
+    },
+    "declarations": {
+      "type": "object",
+      "properties": {
+        "disc": {
+          "type": "object",
+          "properties": {
+            "mediaType": {
+              "type": "string"
+            },
+            "diameterMm": {
+              "type": "number"
+            },
+            "holeDiameterMm": {
+              "type": "number"
+            },
+            "layers": {
+              "type": "integer"
+            },
+            "mid": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "mediaType",
+            "diameterMm",
+            "holeDiameterMm",
+            "layers",
+            "mid"
+          ],
+          "additionalProperties": false
+        },
+        "confirmedWritableSectors": {
+          "type": "integer"
+        },
+        "generatorVersion": {
+          "type": "string"
+        },
+        "generatorCommit": {
+          "type": "string"
+        },
+        "evidenceSource": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "disc",
+        "confirmedWritableSectors",
+        "generatorVersion",
+        "generatorCommit",
+        "evidenceSource"
+      ],
+      "additionalProperties": false
+    },
+    "sourceImageFile": {
+      "type": "string"
+    },
+    "sourceImageSha256": {
+      "type": "string"
+    },
+    "sourceRecordFile": {
+      "type": "string"
+    },
+    "contentSha256": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "state",
+    "id",
+    "generationRecord",
+    "declarations",
+    "sourceImageFile",
+    "sourceImageSha256",
+    "sourceRecordFile",
+    "contentSha256"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:external-generation-snapshot:v1"
+}

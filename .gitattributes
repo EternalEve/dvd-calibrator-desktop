@@ -1,0 +1,4 @@
+* text=auto
+third_party/DiscImageStudio/DvdTrackGeometry.cs -text
+*.png -text
+*.pgm -text

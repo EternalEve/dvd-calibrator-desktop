@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../DvdCalibrator.Core/DvdCalibrator.Core.csproj" /></ItemGroup>
+</Project>

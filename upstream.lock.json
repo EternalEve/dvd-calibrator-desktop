@@ -1,0 +1,15 @@
+{
+  "repository": "https://github.com/JiaFeiMiao-K-Cat/DiscImageStudio",
+  "commit": "374c0630326ea61be9adca8d7de3c96f083c00df",
+  "upstreamVersionPrefix": "1.3.6",
+  "retrievedOn": "2026-11-03",
+  "license": "GPL-3.0-or-later",
+  "files": [{
+    "source": "src/DiscImageStudio.Core/DvdTrackGeometry.cs",
+    "local": "third_party/DiscImageStudio/DvdTrackGeometry.cs",
+    "sha256": "54f03eb005be1d0d1c9b15cea2a3eab7f57c7b2bde9bf1f7ee0b96c453d916af",
+    "modified": false
+  }],
+  "recordAdapter": "dvd-nrzi-disc-fill-v2/dispersion/full-disc",
+  "note": "Parser compatibility baseline only. Upstream sidecars do not establish the executable commit or source image hash."
+}
