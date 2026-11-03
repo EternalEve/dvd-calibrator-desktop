@@ -1,0 +1,175 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer"
+    },
+    "recordType": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "evidenceSource": {
+      "type": "string"
+    },
+    "planSha256": {
+      "type": "string"
+    },
+    "disc": {
+      "type": "object",
+      "properties": {
+        "mediaType": {
+          "type": "string"
+        },
+        "diameterMm": {
+          "type": "number"
+        },
+        "holeDiameterMm": {
+          "type": "number"
+        },
+        "layers": {
+          "type": "integer"
+        },
+        "mid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "mediaType",
+        "diameterMm",
+        "holeDiameterMm",
+        "layers",
+        "mid"
+      ],
+      "additionalProperties": false
+    },
+    "generated": {
+      "type": "object",
+      "properties": {
+        "innerRadiusMm": {
+          "type": "number"
+        },
+        "outerRadiusMm": {
+          "type": "number"
+        },
+        "totalSectors": {
+          "type": "integer"
+        },
+        "channelBitLengthNm": {
+          "type": "number"
+        },
+        "pitchLinear": {
+          "type": "number"
+        },
+        "pitchQuadratic": {
+          "type": "number"
+        },
+        "pitchCubic": {
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "cw",
+            "ccw"
+          ]
+        },
+        "directionConvention": {
+          "type": "string"
+        },
+        "startLba": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "innerRadiusMm",
+        "outerRadiusMm",
+        "totalSectors",
+        "channelBitLengthNm",
+        "pitchLinear",
+        "pitchQuadratic",
+        "pitchCubic",
+        "direction",
+        "directionConvention",
+        "startLba"
+      ],
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "adapterVersion": {
+          "type": "string"
+        },
+        "upstreamCommit": {
+          "type": "string"
+        },
+        "pngSha256": {
+          "type": "string"
+        },
+        "coordinateConvention": {
+          "type": "string"
+        },
+        "pixelSize": {
+          "type": "integer"
+        },
+        "pixelCentre": {
+          "type": "number"
+        },
+        "startAngleDegrees": {
+          "type": "number"
+        },
+        "luminanceThreshold": {
+          "type": "integer"
+        },
+        "alphaThreshold": {
+          "type": "integer"
+        },
+        "sampleEveryChannelBits": {
+          "type": "integer"
+        },
+        "tone": {
+          "type": "string"
+        },
+        "psnOffset": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "adapterVersion",
+        "upstreamCommit",
+        "pngSha256",
+        "coordinateConvention",
+        "pixelSize",
+        "pixelCentre",
+        "startAngleDegrees",
+        "luminanceThreshold",
+        "alphaThreshold",
+        "sampleEveryChannelBits",
+        "tone",
+        "psnOffset"
+      ],
+      "additionalProperties": false
+    },
+    "contentSha256": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "id",
+    "evidenceSource",
+    "planSha256",
+    "disc",
+    "generated",
+    "target",
+    "contentSha256"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:reference-target-simulation:v1"
+}

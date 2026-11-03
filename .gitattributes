@@ -3,5 +3,7 @@ third_party/DiscImageStudio/DvdTrackGeometry.cs -text
 third_party/DiscImageStudio/CalibrationPhotoRectifier.cs -text
 third_party/DiscImageStudio/ProjectJsonStore.cs -text
 third_party/DiscImageStudio/ToneProfile.cs -text
+third_party/DiscImageStudio/CalibrationReferencePattern.cs -text
+*.gz -text
 *.png -text
 *.pgm -text

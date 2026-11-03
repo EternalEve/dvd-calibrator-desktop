@@ -29,6 +29,11 @@ public sealed class SnapshotBundle
                 Id = e.Id; Hash = e.ContentSha256; Geometry = e.GenerationRecord.Generated;
                 if (files.Count != 3) throw new ArgumentException("外部生成快照包含未定义附件。");
                 break;
+            case "reference-target-simulation":
+                var simulation = RecordJson.Parse<ReferenceTargetSimulation>(json); simulation.Validate();
+                Id = simulation.Id; Hash = simulation.ContentSha256; Geometry = simulation.Generated;
+                if (files.Count != 1) throw new ArgumentException("参考靶模拟快照包含未定义附件。");
+                break;
             default: throw new ArgumentException("请选择第一阶段冻结的 generation.json。");
         }
     }
@@ -72,7 +77,9 @@ public sealed class PhotoTask
     }
     public void Validate()
     {
-        _ = new SnapshotBundle(Snapshot.Files);
+        var frozen = new SnapshotBundle(Snapshot.Files);
+        if (frozen.Id != Snapshot.Id || frozen.Hash != Snapshot.Hash || frozen.Geometry != Snapshot.Geometry)
+            throw new ArgumentException("生成附件与任务创建时的快照身份不一致。");
         Session.Validate();
         Fit?.Validate(Snapshot.Geometry, Snapshot.Hash, Session);
         if (Session.SnapshotId != Snapshot.Id || Session.SnapshotSha256 != Snapshot.Hash
@@ -106,6 +113,20 @@ public sealed class PhotoTask
 
     public void SaveNew(string path)
     {
+        string target = Path.GetFullPath(path);
+        if (File.Exists(target) || Directory.Exists(target)) throw new IOException("任务包已存在，请使用新文件名保存修订。");
+        string parent = Path.GetDirectoryName(target)!; Directory.CreateDirectory(parent);
+        string temporary = Path.Combine(parent, ".dvdphoto-" + Guid.NewGuid().ToString("N") + ".tmp");
+        try
+        {
+            using (var stream = new FileStream(temporary, FileMode.CreateNew)) WriteTo(stream);
+            File.Move(temporary, target, overwrite: false);
+        }
+        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+    }
+
+    internal void WriteTo(Stream stream)
+    {
         Validate();
         byte[] sessionJson = JsonSerializer.SerializeToUtf8Bytes(Session, RecordJson.Options);
         if (sessionJson.Length > RecordJson.MaxBytes) throw new ArgumentException("照片会话记录超过大小限制。");
@@ -117,32 +138,24 @@ public sealed class PhotoTask
             Dense!.Verify(AnalyticSnapshot(), Session, Photo.Image);
             if (denseJson.Length > RecordJson.MaxBytes) throw new ArgumentException("密环记录超过大小限制。");
         }
-        string target = Path.GetFullPath(path);
-        if (File.Exists(target) || Directory.Exists(target)) throw new IOException("任务包已存在，请使用新文件名保存修订。");
-        string parent = Path.GetDirectoryName(target)!; Directory.CreateDirectory(parent);
-        string temporary = Path.Combine(parent, ".dvdphoto-" + Guid.NewGuid().ToString("N") + ".tmp");
-        try
-        {
-            using (var stream = new FileStream(temporary, FileMode.CreateNew))
-            using (var archive = new ZipArchive(stream, ZipArchiveMode.Create))
-            {
-                void Entry(string name, byte[] bytes)
-                { using var entry = archive.CreateEntry(name, CompressionLevel.Fastest).Open(); entry.Write(bytes); }
-                Entry("session.json", sessionJson);
-                if (fitJson is not null) Entry("fit.json", fitJson);
-                if (denseJson is not null) Entry("dense.json", denseJson);
-                foreach (var (name, bytes) in Snapshot.Files) Entry("generation/" + name, bytes);
-                Entry("photo/original", Photo.OriginalBytes); Entry("photo/oriented.png", Photo.OrientedPng);
-            }
-            File.Move(temporary, target, overwrite: false);
-        }
-        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true);
+        void Entry(string name, byte[] bytes)
+        { using var entry = archive.CreateEntry(name, CompressionLevel.Fastest).Open(); entry.Write(bytes); }
+        Entry("session.json", sessionJson);
+        if (fitJson is not null) Entry("fit.json", fitJson);
+        if (denseJson is not null) Entry("dense.json", denseJson);
+        foreach (var (name, bytes) in Snapshot.Files) Entry("generation/" + name, bytes);
+        Entry("photo/original", Photo.OriginalBytes); Entry("photo/oriented.png", Photo.OrientedPng);
     }
 
     public static PhotoTask Load(string path)
     {
         if (new FileInfo(path).Length > 350_000_000) throw new ArgumentException("任务包超过 350 MB。");
-        using var archive = ZipFile.OpenRead(path);
+        using var stream = File.OpenRead(path); return ReadFrom(stream);
+    }
+    internal static PhotoTask ReadFrom(Stream stream)
+    {
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read, leaveOpen: true);
         if (archive.Entries.Count > 8 || archive.Entries.Select(e => e.FullName).Distinct(StringComparer.Ordinal).Count() != archive.Entries.Count)
             throw new ArgumentException("任务包包含重复或过多条目。");
         byte[] Read(string name, int max)

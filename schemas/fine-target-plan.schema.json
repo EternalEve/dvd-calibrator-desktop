@@ -1,0 +1,409 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer"
+    },
+    "recordType": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "disc": {
+      "type": "object",
+      "properties": {
+        "mediaType": {
+          "type": "string"
+        },
+        "diameterMm": {
+          "type": "number"
+        },
+        "holeDiameterMm": {
+          "type": "number"
+        },
+        "layers": {
+          "type": "integer"
+        },
+        "mid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "mediaType",
+        "diameterMm",
+        "holeDiameterMm",
+        "layers",
+        "mid"
+      ],
+      "additionalProperties": false
+    },
+    "coarse": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "snapshotSha256": {
+          "type": "string"
+        },
+        "sessionSha256": {
+          "type": "string"
+        },
+        "resultSha256": {
+          "type": "string"
+        },
+        "selectedCandidateId": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "innerRadiusMm": {
+              "type": "number"
+            },
+            "outerRadiusMm": {
+              "type": "number"
+            },
+            "totalSectors": {
+              "type": "integer"
+            },
+            "channelBitLengthNm": {
+              "type": "number"
+            },
+            "pitchLinear": {
+              "type": "number"
+            },
+            "pitchQuadratic": {
+              "type": "number"
+            },
+            "pitchCubic": {
+              "type": "number"
+            },
+            "direction": {
+              "enum": [
+                "cw",
+                "ccw"
+              ]
+            },
+            "directionConvention": {
+              "type": "string"
+            },
+            "startLba": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "innerRadiusMm",
+            "outerRadiusMm",
+            "totalSectors",
+            "channelBitLengthNm",
+            "pitchLinear",
+            "pitchQuadratic",
+            "pitchCubic",
+            "direction",
+            "directionConvention",
+            "startLba"
+          ],
+          "additionalProperties": false
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "innerRadiusMm": {
+                    "type": "number"
+                  },
+                  "outerRadiusMm": {
+                    "type": "number"
+                  },
+                  "totalSectors": {
+                    "type": "integer"
+                  },
+                  "channelBitLengthNm": {
+                    "type": "number"
+                  },
+                  "pitchLinear": {
+                    "type": "number"
+                  },
+                  "pitchQuadratic": {
+                    "type": "number"
+                  },
+                  "pitchCubic": {
+                    "type": "number"
+                  },
+                  "direction": {
+                    "enum": [
+                      "cw",
+                      "ccw"
+                    ]
+                  },
+                  "directionConvention": {
+                    "type": "string"
+                  },
+                  "startLba": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "innerRadiusMm",
+                  "outerRadiusMm",
+                  "totalSectors",
+                  "channelBitLengthNm",
+                  "pitchLinear",
+                  "pitchQuadratic",
+                  "pitchCubic",
+                  "direction",
+                  "directionConvention",
+                  "startLba"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "parameters"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "snapshotSha256",
+        "sessionSha256",
+        "resultSha256",
+        "selectedCandidateId",
+        "parameters",
+        "alternatives"
+      ],
+      "additionalProperties": false
+    },
+    "generated": {
+      "type": "object",
+      "properties": {
+        "innerRadiusMm": {
+          "type": "number"
+        },
+        "outerRadiusMm": {
+          "type": "number"
+        },
+        "totalSectors": {
+          "type": "integer"
+        },
+        "channelBitLengthNm": {
+          "type": "number"
+        },
+        "pitchLinear": {
+          "type": "number"
+        },
+        "pitchQuadratic": {
+          "type": "number"
+        },
+        "pitchCubic": {
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "cw",
+            "ccw"
+          ]
+        },
+        "directionConvention": {
+          "type": "string"
+        },
+        "startLba": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "innerRadiusMm",
+        "outerRadiusMm",
+        "totalSectors",
+        "channelBitLengthNm",
+        "pitchLinear",
+        "pitchQuadratic",
+        "pitchCubic",
+        "direction",
+        "directionConvention",
+        "startLba"
+      ],
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "adapterVersion": {
+          "type": "string"
+        },
+        "upstreamCommit": {
+          "type": "string"
+        },
+        "pngSha256": {
+          "type": "string"
+        },
+        "coordinateConvention": {
+          "type": "string"
+        },
+        "pixelSize": {
+          "type": "integer"
+        },
+        "pixelCentre": {
+          "type": "number"
+        },
+        "startAngleDegrees": {
+          "type": "number"
+        },
+        "luminanceThreshold": {
+          "type": "integer"
+        },
+        "alphaThreshold": {
+          "type": "integer"
+        },
+        "sampleEveryChannelBits": {
+          "type": "integer"
+        },
+        "tone": {
+          "type": "string"
+        },
+        "psnOffset": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "adapterVersion",
+        "upstreamCommit",
+        "pngSha256",
+        "coordinateConvention",
+        "pixelSize",
+        "pixelCentre",
+        "startAngleDegrees",
+        "luminanceThreshold",
+        "alphaThreshold",
+        "sampleEveryChannelBits",
+        "tone",
+        "psnOffset"
+      ],
+      "additionalProperties": false
+    },
+    "expectedPhotoPixelsPerMm": {
+      "type": "number"
+    },
+    "forecast": {
+      "type": "object",
+      "properties": {
+        "innerRadiusMm": {
+          "type": "number"
+        },
+        "outerRadiusMm": {
+          "type": "number"
+        },
+        "maximumCandidateDifferenceMm": {
+          "type": "number"
+        },
+        "minimumArmSpacingPixels": {
+          "type": "number"
+        },
+        "minimumLineWidthPixels": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string"
+        },
+        "curves": {
+          "type": "array",
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "candidateId": {
+                "type": "string"
+              },
+              "curve": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "radiusMm": {
+                      "type": "number"
+                    },
+                    "angleRadians": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "radiusMm",
+                    "angleRadians"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "candidateId",
+              "curve"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "innerRadiusMm",
+        "outerRadiusMm",
+        "maximumCandidateDifferenceMm",
+        "minimumArmSpacingPixels",
+        "minimumLineWidthPixels",
+        "status",
+        "curves"
+      ],
+      "additionalProperties": false
+    },
+    "physicalValidation": {
+      "type": "string"
+    },
+    "contentSha256": {
+      "type": "string"
+    },
+    "confirmedPlanSha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "id",
+    "disc",
+    "coarse",
+    "generated",
+    "target",
+    "expectedPhotoPixelsPerMm",
+    "forecast",
+    "physicalValidation",
+    "contentSha256",
+    "confirmedPlanSha256"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:fine-target-plan:v1"
+}

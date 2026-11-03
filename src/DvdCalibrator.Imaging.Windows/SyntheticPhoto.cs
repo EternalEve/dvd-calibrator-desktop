@@ -10,6 +10,52 @@ public static class SyntheticPhoto
         => CreatePhoto(false);
     public static PhotoTask CreateTraceDemo()
         => CreatePhoto(true);
+    public static TwoDiscTask CreateTwoDiscDemo(CancellationToken token = default)
+    {
+        token.ThrowIfCancellationRequested();
+        var coarse = CreateDenseDemo(); token.ThrowIfCancellationRequested(); coarse.AttachDense(coarse.AnalyzeDense(token: token));
+        var workflow = TwoDiscTask.CreateSimulation(coarse); workflow.ConfirmPlan();
+        var actual = coarse.Snapshot.Geometry with { InnerRadiusMm = 24.003, OuterRadiusMm = 58.006 };
+        workflow.BindFine(CreateReferencePhoto(workflow.Plan, actual, token)); return workflow;
+    }
+    public static PhotoTask CreateReferencePhoto(FineTargetPlan plan, GeometryParameters actual, CancellationToken token = default)
+    {
+        token.ThrowIfCancellationRequested();
+        plan.Validate(); actual.Validate();
+        if (!plan.IsConfirmed) throw new ArgumentException("请先确认精调计划。");
+        var snapshot = ReferenceTargetSimulation.Create("simulation-fine-" + plan.Id, plan.ContentSha256, plan.Disc, plan.Generated);
+        var bundle = new SnapshotBundle(new() { ["generation.json"] = JsonSerializer.SerializeToUtf8Bytes(snapshot, RecordJson.Options) });
+        var h = new DiscPhotoTransform([7.5, .2, 500, -.1, 7.4, 500, .0001, -.0001, 1]);
+        var model = new ForwardModel(plan.Generated, actual); double lo = Math.Max(plan.Generated.InnerRadiusMm, actual.InnerRadiusMm) + .5;
+        double hi = Math.Min(plan.Generated.OuterRadiusMm, actual.OuterRadiusMm) - .5;
+        var table = Enumerable.Range(0, 4097).Select(i => model.AtRadius(actual.InnerRadiusMm + (actual.OuterRadiusMm - actual.InnerRadiusMm) * i / 4096)).ToArray();
+        byte[] pixels = new byte[1000 * 1000 * 3];
+        for (int y = 0; y < 1000; y++)
+        {
+            token.ThrowIfCancellationRequested();
+            for (int x = 0; x < 1000; x++)
+            {
+                var d = h.SourceToDisc(new(x, y)); double r = Math.Sqrt(d.X * d.X + d.Y * d.Y); byte value = r is >= 7.5 and <= 60 ? (byte)210 : (byte)35;
+                if (r >= actual.InnerRadiusMm && r <= actual.OuterRadiusMm)
+                {
+                    double at = (r - actual.InnerRadiusMm) / (actual.OuterRadiusMm - actual.InnerRadiusMm) * 4096; int i = Math.Clamp((int)at, 0, 4095); double f = at - i;
+                    double phase = table[i].PhaseRadians + f * (table[i + 1].PhaseRadians - table[i].PhaseRadians) + .63;
+                    double rg = table[i].SourceRadiusMm + f * (table[i + 1].SourceRadiusMm - table[i].SourceRadiusMm), a = Math.Atan2(d.Y, d.X) - phase;
+                    byte gray = ReferenceTarget.Sample(rg * Math.Cos(a), rg * Math.Sin(a), plan.Generated.OuterRadiusMm);
+                    value = (byte)(65 + 130d * gray / 255);
+                }
+                int atPixel = (y * 1000 + x) * 3; pixels[atPixel] = value; pixels[atPixel + 1] = value; pixels[atPixel + 2] = value;
+            }
+        }
+        var image = new RgbImage(1000, 1000, pixels); var png = PhotoCodec.Encode(image);
+        var photo = new ImportedPhoto(png, png, new(PhotoCodec.Hash(png), PhotoCodec.Hash(png), image.PixelsSha256, 1000, 1000, 1000, 1000, 1), image);
+        ImmutableArray<PixelPoint> Circle(double r) => Enumerable.Range(0, 32).Select(i => h.DiscToSource(new(r * Math.Cos(i * Math.PI / 16), r * Math.Sin(i * Math.PI / 16)))).ToImmutableArray();
+        ImmutableArray<PixelPoint> Trace(double offset, int count) => Enumerable.Range(0, count).Select(i =>
+        { double r = lo + (hi - lo) * i / (count - 1), a = model.AtRadius(r).PhaseRadians + .63 + offset; return h.DiscToSource(new(r * Math.Cos(a), r * Math.Sin(a))); }).ToImmutableArray();
+        var session = PhotoSession.Create(snapshot.Id, snapshot.ContentSha256, photo.Metadata).WithBoundaries(Circle(60), Circle(7.5)).Rectify().Confirm()
+            .WithTraces([new("line-1", Trace(0, 64)), new("validation-180", Trace(Math.PI, 48))]);
+        return new(bundle, photo, session);
+    }
     public static PhotoTask CreateDenseDemo()
     {
         var g = new GeometryParameters(24, 58, 2295104, 133.3, .02, -.03, .015, SpiralDirection.Cw, GeometryParameters.Convention, 0);

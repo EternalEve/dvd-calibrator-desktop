@@ -4,5 +4,8 @@
     <Compile Include="../../third_party/DiscImageStudio/CalibrationPhotoRectifier.cs" Link="Upstream/CalibrationPhotoRectifier.cs" />
     <Compile Include="../../third_party/DiscImageStudio/ProjectJsonStore.cs" Link="Upstream/ProjectJsonStore.cs" />
     <Compile Include="../../third_party/DiscImageStudio/ToneProfile.cs" Link="Upstream/ToneProfile.cs" />
+    <Compile Include="../../third_party/DiscImageStudio/CalibrationReferencePattern.cs" Link="Upstream/CalibrationReferencePattern.cs" />
+    <EmbeddedResource Include="../../third_party/DiscImageStudio/target_slim.png" LogicalName="DiscImageStudio.Core.Calibration.target_slim.png" />
+    <EmbeddedResource Include="../../third_party/DiscImageStudio/target_slim.gray.gz" LogicalName="DiscImageStudio.Core.Calibration.target_slim.gray.gz" />
   </ItemGroup>
 </Project>

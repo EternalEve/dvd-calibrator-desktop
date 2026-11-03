@@ -55,4 +55,17 @@ $null = Invoke-Cli 0 @('export-profile', '--review', $reviewPath, '--session', $
 $profile = Get-Content -LiteralPath (Join-Path $profileFolder 'calibration-profile.json') -Raw | ConvertFrom-Json
 if ($profile.physicalValidation -ne 'pending' -or -not (Test-Path -LiteralPath (Join-Path $profileFolder 'candidate.discproj'))) { throw 'Profile export contract failed.' }
 $null = Invoke-Cli 3 @('export-profile', '--review', $reviewPath, '--session', $fitSession, '--out', $profileFolder, '--confirm-curve', 'true')
-Write-Output "PASS CLI generation / photo / fit / profile / failure-path checks ($runRoot)"
+$referenceRun = Get-ChildItem -LiteralPath (Join-Path $projectRoot 'artifacts') -Directory -Filter 'reference-contract-*' | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+if ($null -eq $referenceRun) { throw 'Run Core reference-contract checks before CLI regression.' }
+$null = Invoke-Cli 0 @('verify-fine-generation', '--plan', (Join-Path $referenceRun.FullName 'target-job/fine-target-plan.json'), '--generated', (Join-Path $referenceRun.FullName 'frozen/generation.json'))
+$null = Invoke-Cli 2 @('verify-fine-generation', '--plan', (Join-Path $referenceRun.FullName 'target-job/fine-target-plan.json'), '--generated', (Join-Path $frozen 'generation.json'))
+$photoRun = Get-ChildItem -LiteralPath (Join-Path $projectRoot 'artifacts') -Directory -Filter 'photo-*' | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+$fineGeneration = Join-Path $photoRun.FullName 'fine-input-generation.json'
+$fineSession = Join-Path $photoRun.FullName 'fine-input-session.json'
+$inspection = Invoke-Cli 0 @('inspect', '--record', $fineGeneration)
+if (($inspection | ConvertFrom-Json).status -ne 'simulation-only') { throw 'Reference simulation was presented as actual output.' }
+$fineFit = Join-Path $runRoot 'fine-fit'
+$null = Invoke-Cli 0 @('fit-trace', '--generated', $fineGeneration, '--session', $fineSession, '--out', $fineFit)
+$null = Invoke-Cli 0 @('export-profile', '--review', (Join-Path $fineFit 'fit-review.json'), '--session', $fineSession, '--out', (Join-Path $runRoot 'fine-profile'), '--confirm-curve', 'true')
+$null = Invoke-Cli 2 @('fit-trace', '--generated', $fitGeneration, '--session', $fineSession, '--out', (Join-Path $runRoot 'wrong-g0-fine-fit'))
+Write-Output "PASS CLI generation / photo / G1 fine-fit / target verification / profile / failure-path checks ($runRoot)"

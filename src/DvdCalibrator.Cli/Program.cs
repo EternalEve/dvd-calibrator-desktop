@@ -9,7 +9,7 @@ try
     if (args.Length == 0 || args is ["--help"] or ["help"])
     {
         Console.WriteLine("""
-            DvdCalibrator 0.4.0 — geometry, photo rectification and continuous trace fitting
+            DvdCalibrator 0.5.0 — geometry, reference target contracts and trace fitting
             demo --out NEW_FOLDER
             inspect --record SNAPSHOT_OR_DISCIMAGE_SIDECAR.json
             import-discimage --record SIDECAR.json --out NEW_FOLDER
@@ -22,6 +22,7 @@ try
             fit-trace --generated SNAPSHOT.json --session PHOTO_SESSION_V2.json --out NEW_FOLDER [--shape-order 0]
             export-profile --review FIT_REVIEW.json --session PHOTO_SESSION_V2.json --out NEW_FOLDER
                            --confirm-curve true [--candidate candidate-1]
+            verify-fine-generation --plan CONFIRMED_FINE_PLAN.json --generated EXTERNAL_SNAPSHOT.json
 
             Profiles contain equivalent compensation; physical validation remains pending.
             Existing output directories are rejected. Exit codes: 0 OK, 2 invalid input,
@@ -41,6 +42,7 @@ try
         "rectify" => ["session", "out"],
         "fit-trace" => ["generated", "session", "out", "shape-order"],
         "export-profile" => ["review", "session", "out", "candidate", "confirm-curve"],
+        "verify-fine-generation" => ["plan", "generated"],
         _ => throw new ArgumentException($"未知命令：{command}，使用 --help 查看帮助。")
     };
     var options = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -55,6 +57,15 @@ try
 
     switch (command)
     {
+        case "verify-fine-generation":
+        {
+            var plan = RecordJson.Read<FineTargetPlan>(Require("plan"));
+            string path = Require("generated"), folder = Path.GetDirectoryName(Path.GetFullPath(path))!;
+            var snapshot = RecordJson.Read<ExternalGenerationSnapshot>(path);
+            plan.VerifyActualGeneration(snapshot, name => File.ReadAllBytes(Path.Combine(folder, name)));
+            Console.WriteLine("Second-disc generation matches frozen G1, exact target and pinned mapping; physical validation pending.");
+            break;
+        }
         case "fit-trace":
         {
             string path = Require("generated");
@@ -63,6 +74,10 @@ try
             if (doc.RootElement.GetProperty("recordType").GetString() == "generation-snapshot")
             {
                 var s = RecordJson.Read<GenerationSnapshot>(path); s.Validate(); g = s.Generated; hash = s.ContentSha256; id = s.Id;
+            }
+            else if (doc.RootElement.GetProperty("recordType").GetString() == "reference-target-simulation")
+            {
+                var s = RecordJson.Read<ReferenceTargetSimulation>(path); s.Validate(); g = s.Generated; hash = s.ContentSha256; id = s.Id;
             }
             else
             {
@@ -107,7 +122,12 @@ try
             string path = Require("record");
             if (new FileInfo(path).Length > RecordJson.MaxBytes) throw new ArgumentException("记录超过 4 MB。");
             using var document = RecordJson.ParseDocument(File.ReadAllText(path));
-            if (document.RootElement.TryGetProperty("recordType", out var type) && type.GetString() == "generation-snapshot")
+            if (document.RootElement.TryGetProperty("recordType", out var type) && type.GetString() == "reference-target-simulation")
+            {
+                var snapshot = RecordJson.Read<ReferenceTargetSimulation>(path); snapshot.Validate();
+                Print(new { status = "simulation-only", snapshot.Id, snapshot.ContentSha256, snapshot.PlanSha256, snapshot.Generated, snapshot.Target, physicalValidation = "pending" });
+            }
+            else if (document.RootElement.TryGetProperty("recordType", out type) && type.GetString() == "generation-snapshot")
             {
                 var snapshot = RecordJson.Read<GenerationSnapshot>(path); snapshot.Validate();
                 var geometry = new TrackGeometry(snapshot.Generated);

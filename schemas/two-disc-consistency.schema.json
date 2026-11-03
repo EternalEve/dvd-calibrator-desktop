@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string"
+    },
+    "coarseShapeRmsMm": {
+      "type": "number"
+    },
+    "coarseShapeMaximumMm": {
+      "type": "number"
+    },
+    "fineSourcePixelsPerMm": {
+      "type": "number"
+    },
+    "fineLineWidthPixels": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "status",
+    "coarseShapeRmsMm",
+    "coarseShapeMaximumMm",
+    "fineSourcePixelsPerMm",
+    "fineLineWidthPixels"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:two-disc-consistency:v1"
+}

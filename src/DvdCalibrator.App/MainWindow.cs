@@ -11,7 +11,7 @@ using Microsoft.Win32;
 
 namespace DvdCalibrator.App;
 
-public sealed class MainWindow : Window
+public sealed partial class MainWindow : Window
 {
     private PhotoTask? task;
     private SnapshotBundle? pendingSnapshot;
@@ -19,6 +19,7 @@ public sealed class MainWindow : Window
     private readonly Image photoImage = new() { Stretch = Stretch.Fill, IsHitTestVisible = false };
     private readonly Image rectified = new() { Stretch = Stretch.Uniform };
     private readonly Image polar = new() { Stretch = Stretch.Uniform };
+    private readonly Image fineForecastImage = new() { Name = "FineTargetForecast", Stretch = Stretch.Uniform };
     private readonly ScrollViewer scroll = new() { Name = "SourceScroll", HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     private readonly ComboBox mode = new() { Width = 155, Margin = new(5), ItemsSource = new[] { "实体外缘", "真实中心孔", "反光遮罩", "主径向线描点", "对侧 180° 留出线" }, SelectedIndex = 0 };
     private readonly ComboBox shapeOrder = new() { Width = 145, Margin = new(3), ItemsSource = new[] { "保留轨距形状", "拟合一阶形状", "拟合二阶形状", "拟合三阶形状" }, SelectedIndex = 0 };
@@ -43,12 +44,12 @@ public sealed class MainWindow : Window
 
     public MainWindow()
     {
-        Title = "DVD Calibrator · 照片标注与矫正"; Width = 1380; Height = 900; MinWidth = 1050; MinHeight = 720;
+        Title = "DVD Calibrator · 两盘任务与照片标注"; Width = 1380; Height = 1000; MinWidth = 1050; MinHeight = 800;
         Background = new SolidColorBrush(Color.FromRgb(246, 248, 251)); FontFamily = new("Microsoft YaHei UI"); FontSize = 13;
         var root = new DockPanel { Background = Background }; Content = root;
         var heading = new StackPanel { Margin = new(16, 12, 16, 4) };
         heading.Children.Add(new TextBlock { Text = "DVD CALIBRATOR", FontSize = 23, FontWeight = FontWeights.SemiBold });
-        heading.Children.Add(new TextBlock { Text = "04  密环、混合观测与下一张预测    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) });
+        heading.Children.Add(new TextBlock { Text = "05  标靶契约、两盘任务与独立精调    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) });
         DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading);
         var toolbar = new WrapPanel { Margin = new(12, 0, 12, 4) };
         toolbar.Children.Add(Button("打开生成快照", OpenSnapshot)); toolbar.Children.Add(Button("导入照片", ImportPhoto));
@@ -57,6 +58,7 @@ public sealed class MainWindow : Window
         toolbar.Children.Add(Button("载入拟合演示", LoadTraceDemo));
         toolbar.Children.Add(Button("载入密环演示", LoadDenseDemo));
         DockPanel.SetDock(toolbar, Dock.Top); root.Children.Add(toolbar);
+        var workflowBar = BuildTwoDiscToolbar(); DockPanel.SetDock(workflowBar, Dock.Top); root.Children.Add(workflowBar);
         var footer = new Border { Background = new SolidColorBrush(Color.FromRgb(229, 237, 247)), Child = status, MinHeight = 46 };
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
         var workspace = new Grid { Margin = new(12, 2, 12, 12) };
@@ -91,6 +93,7 @@ public sealed class MainWindow : Window
         var tabs = new TabControl { Margin = new(8, 0, 8, 0) };
         tabs.Items.Add(new TabItem { Header = "正视预览", Content = rectified });
         tabs.Items.Add(new TabItem { Header = "极坐标 · 横向逆时针角 / 纵向半径", Content = polar }); right.Children.Add(tabs);
+        tabs.Items.Add(new TabItem { Header = "第二张完整预测", Content = fineForecastImage });
         mode.SelectionChanged += (_, _) => { selected = -1; draftMask.Clear(); Draw(); };
         shapeOrder.SelectionChanged += (_, _) => { if (!updatingCandidates && task?.Fit is not null) { task.ClearFit(); dirty = true; Refresh(); Draw(); } };
         candidateBox.SelectionChanged += (_, _) =>
@@ -129,7 +132,7 @@ public sealed class MainWindow : Window
         if (dialog.ShowDialog() != true) return;
         var next = SnapshotBundle.Load(dialog.FileName);
         if (!MayReplace()) return;
-        pendingSnapshot = next; task = null; dirty = false; draftMask.Clear(); ClearPreviews(); photoImage.Source = null;
+        twoDisc = null; pendingSnapshot = next; task = null; dirty = false; draftMask.Clear(); ClearPreviews(); photoImage.Source = null;
         canvas.Width = canvas.Height = 0; Draw(); Refresh(); SetStatus($"已载入生成快照 {next.Id}，请导入此盘照片。");
     }
     private void ImportPhoto()
@@ -168,6 +171,7 @@ public sealed class MainWindow : Window
     public void LoadPhotoTask(PhotoTask next) => Load(next, false);
     private void Load(PhotoTask next, bool changed)
     {
+        if (twoDisc is not null && !ReferenceEquals(next, twoDisc.Coarse) && !ReferenceEquals(next, twoDisc.Fine)) twoDisc = null;
         task = next; pendingSnapshot = next.Snapshot; dirty = changed; selected = -1; draftMask.Clear();
         updatingCandidates = true; shapeOrder.SelectedIndex = next.Fit?.Result.Settings.ShapeOrder ?? 0; updatingCandidates = false;
         photoImage.Source = PhotoCodec.Bitmap(next.Photo.Image);
@@ -182,7 +186,7 @@ public sealed class MainWindow : Window
         if (draftMask.Count > 0) { SetStatus("请先结束遮罩，或按 Esc 放弃当前遮罩草稿。"); return; }
         var dialog = new SaveFileDialog { Filter = "照片任务包|*.dvdphoto", DefaultExt = ".dvdphoto", OverwritePrompt = false, FileName = "photo-task-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") };
         if (dialog.ShowDialog() != true) return;
-        task.SaveNew(dialog.FileName); dirty = false; Refresh(); SetStatus("任务包已保存，包含原始照片、定向 PNG、生成记录与全部标注；可换目录恢复。");
+        task.SaveNew(dialog.FileName); dirty = twoDisc is not null; Refresh(); SetStatus("单盘任务包已保存，包含原图、生成记录与标注；两盘关联请另点“保存两盘任务”。");
     }
     private void FitView()
     {
@@ -453,6 +457,7 @@ public sealed class MainWindow : Window
         confirmButton.IsEnabled = task?.Session.Rectification is not null && rectified.Source is not null && !busy && !task.Session.IsConfirmed;
         mode.IsEnabled = !busy;
         RefreshFit();
+        RefreshTwoDisc();
         denseButton.IsEnabled = task?.Session.IsConfirmed == true && !busy;
         denseExportButton.IsEnabled = task?.Dense is not null && !busy;
         var dense = task?.Dense; var best = dense?.Candidates.FirstOrDefault(c => c.Supported);

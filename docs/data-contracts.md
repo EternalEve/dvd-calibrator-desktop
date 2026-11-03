@@ -53,7 +53,7 @@ JSON 使用大小写敏感的 camelCase。构造参数全部必填，包含值�
 
 未知几何映射字段、缺失系数、tone 变换、部分写入或其他记录类型会报错。
 根层诊断统计等额外字段原样保留，不把它们用于求解；解析成功也不会授予应用配置的权限。
-非 fast 旁车、`.calibration.json` schema 6、`.discproj`、流式任务尚未适配。
+非 fast 旁车、`.calibration.json` schema 6、`.discproj` 导入、流式任务尚未适配。
 
 `import-discimage` 输出原始 `source.json` 字节副本和 `generation-record.json`，后者始终标记
 `record-incomplete`，列出实盘类型与容量确认、源图字节与哈希、生成器身份及预处理核对等缺失证据。
@@ -116,3 +116,25 @@ metadata 记录原始/定向文件哈希、RGB 像素哈希、原始/定向尺�
 可选 `dense.json` 与既有 `fit.json` 独立存入照片任务包。读取/附加/保存/导出时，`Verify` 从哈希绑定的定向原图重新提取观测，
 按候选全参数重新评分和构造曲线/下一张诊断，逐项内容哈希比较。不能给新参数沿用旧分支、曲线、分数或支持标记。
 这是一致性检查，不是数字签名；更改输入须重新计算。语义验证也不能由单独 JSON Schema 代替。
+
+## 第二张计划与两盘关联
+
+`fine-target-plan` v1 保存 Disc、完整 G1、第一张快照/会话/结果哈希、候选身份及全部受支持替代模型，
+固定原图 SHA、版本/坐标/阈值/tone 契约、预计照片像素/mm、完整下一张预测和独立计划确认。
+`contentSha256` 对清空自身哈希及确认字段后的内容求哈希；确认等于此哈希，且预测必须为 `plan-review`。
+修改设置、参数、来源或预测均使确认失效；不能给不合格预测补写一个确认字符串来绕过检查。
+
+`reference-target-simulation` v1 是明确的软件模拟快照，保存对应 Plan 哈希和固定契约，不冒充旁车。
+真实第二张继续用 `external-generation-snapshot`，逐项检查实际附件、G1 全参数、介质声明、固定版本声明、
+原图哈希、起始角、PSN offset、阈值和采样设置。原图使用资源原始字节，不依赖文件名判断身份。
+
+`two-disc-task` v1 清单保存任务 ID、`external-record-required` / `simulation` 模式、Plan 和嵌套任务包字节哈希。
+`.dvdcal` ZIP 只允许 `workflow.json`、`coarse.dvdphoto` 和可选 `fine.dvdphoto`。草稿计划可归档，未确认不能关联第二张。
+上限 710 MB，嵌套单盘各 350 MB，清单 4 MB；不任意解压，拒绝重复/未知条目和解压超限。
+打开后先验附件字节，再恢复原图和各自快照/观测，验证 Plan 与第一张当前结果一致。
+第二张必须不同于第一张任务、快照和照片身份；模拟快照只允许进入 simulation 模式。
+
+第二张使用 G1 独立拟合；修改其观测仅清除本张拟合，修改第一张则使既有 Plan 失效，需重新创建。
+`two-disc-consistency` v1 保存跨盘模型形状 RMS/最大差以及第二张实测投影的有效像素与法向线宽。
+最终两盘导出必须有第二张确认且一致性通过，沿用完整 `compensation-profile`，另附 Plan、两张照片任务及两盘报告。
+所有输出 `physicalValidation=pending`；计划输入的预计分辨率与第二张由单应估计的分辨率分别保存，不互相替代。

@@ -1,0 +1,2031 @@
+{
+  "upstreamCommit": "374c0630326ea61be9adca8d7de3c96f083c00df",
+  "pngSha256": "c98ffe87db7cf9c3f132352814e1ce611c44f704de5b7212da4083188257c829",
+  "testedPixels": 20000,
+  "pixelSamples": [
+    {
+      "xMm": -30.651435316977107,
+      "yMm": -27.021567221505343,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 22.300358183952692,
+      "yMm": 35.21266719795368,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -27.545205595348524,
+      "yMm": -12.649937144393714,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 49.09890202897758,
+      "yMm": -7.371878710936702,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -2.1898874460941324,
+      "yMm": 22.781517021579955,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 35.32209510457982,
+      "yMm": -27.276608234475347,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 16.625899517165834,
+      "yMm": 45.81979752191977,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 23.56460924770003,
+      "yMm": -1.0032100370168138,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": 5.2698960519318465,
+      "yMm": 25.42323961887383,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -44.16084491887625,
+      "yMm": 31.33102841251096,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": -21.56944875364251,
+      "yMm": 16.09094590031986,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -22.823519548137046,
+      "yMm": -36.84007003739324,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -44.25243958942362,
+      "yMm": -2.9754263512638643,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -20.06648352296136,
+      "yMm": -12.1308682743545,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": 11.5874817452551,
+      "yMm": 53.69071994399774,
+      "outerRadiusMm": 58,
+      "luminance": 241
+    },
+    {
+      "xMm": -14.565543360524465,
+      "yMm": 41.58018436535459,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 26.791560909796477,
+      "yMm": 15.211355269642617,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 11.277574151888624,
+      "yMm": 25.603187917132654,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 13.277919520593882,
+      "yMm": 25.37199105584533,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -11.810848252479227,
+      "yMm": -17.795275510935106,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -13.94703421470038,
+      "yMm": 32.40646733828325,
+      "outerRadiusMm": 58,
+      "luminance": 0
+    },
+    {
+      "xMm": 51.16548232528391,
+      "yMm": 12.221283790176242,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -31.249818554997145,
+      "yMm": 37.73578060699996,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 34.02493420276964,
+      "yMm": 10.799060475559164,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 13.030281044610161,
+      "yMm": 32.52343198644319,
+      "outerRadiusMm": 58,
+      "luminance": 215
+    },
+    {
+      "xMm": -23.578591910615128,
+      "yMm": -31.862113408414995,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 26.161557902469063,
+      "yMm": 5.129006191889857,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 28.286215894568286,
+      "yMm": 37.62987809754312,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 49.85284351021371,
+      "yMm": -29.12787526259092,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 1.2093205417742507,
+      "yMm": -39.59231323373363,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 10.840579569339935,
+      "yMm": 36.79966471709589,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 13.363440511234378,
+      "yMm": -17.812891313840122,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -26.3958791050411,
+      "yMm": 34.98527846525389,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -20.240601491016598,
+      "yMm": -38.09465503027207,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 48.287445550595336,
+      "yMm": -31.02445487444815,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 48.433845508433976,
+      "yMm": -7.059402954664283,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -0.7894430975525322,
+      "yMm": 27.227163151463436,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 12.988231606838966,
+      "yMm": -15.569373611129942,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -34.653029745896355,
+      "yMm": -20.380814965502893,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -9.377536622642019,
+      "yMm": 52.9191201857789,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 23.051684801027644,
+      "yMm": 5.992176758969063,
+      "outerRadiusMm": 58,
+      "luminance": 0
+    },
+    {
+      "xMm": -3.5843951719965315,
+      "yMm": -27.181455257110493,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": 46.387253521426395,
+      "yMm": -2.1534063482413415,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 0.32671432279262314,
+      "yMm": 25.14721863943022,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 31.23855180173825,
+      "yMm": 13.109045575291768,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -9.272311423240172,
+      "yMm": 25.612719471132152,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": -8.005195123007427,
+      "yMm": 44.12659252421345,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 9.382286386421493,
+      "yMm": 25.04338784737515,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 29.80054917077031,
+      "yMm": 3.3176211473019466,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -29.80349918706028,
+      "yMm": 19.36975122075677,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -1.4860691321900492,
+      "yMm": -48.30636283508615,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -22.38840163063294,
+      "yMm": 2.574113828282551,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -34.54151848733169,
+      "yMm": -10.249929452759766,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 32.13185831683218,
+      "yMm": -19.25537018265192,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 13.715386190570214,
+      "yMm": -16.289147136400764,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -36.28668982634269,
+      "yMm": 23.527193322400052,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 0.7550371196433627,
+      "yMm": 20.86191981678823,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -41.52848766251572,
+      "yMm": 16.850046381040706,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -9.786432269305234,
+      "yMm": 18.16113401397593,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -17.665451699428203,
+      "yMm": -19.14969246167942,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -19.345926961857554,
+      "yMm": 20.950116336200793,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 27.90605067716236,
+      "yMm": -15.177952314371728,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -46.350859665203856,
+      "yMm": 9.804432064644729,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 26.75301843039477,
+      "yMm": -18.06226610150178,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 8.742770283415492,
+      "yMm": -21.4927444269807,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -42.57005402509089,
+      "yMm": -2.7486192648961056,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": -26.72777656678457,
+      "yMm": 1.2943707469478831,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -23.184889663215607,
+      "yMm": 32.680405766035065,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -12.846771121084505,
+      "yMm": -55.61242891646069,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 19.086548240902232,
+      "yMm": 25.382342581115985,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 7.320548761193877,
+      "yMm": 39.535819366468026,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -28.383525506800826,
+      "yMm": 0.21966246846936674,
+      "outerRadiusMm": 57.456789,
+      "luminance": 22
+    },
+    {
+      "xMm": 7.497902508041231,
+      "yMm": -36.26165755430926,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -25.79300671093974,
+      "yMm": 17.08994954409363,
+      "outerRadiusMm": 57.456789,
+      "luminance": 3
+    },
+    {
+      "xMm": -3.0192730361055364,
+      "yMm": -43.45660099843513,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 24.29059294596829,
+      "yMm": -11.763103830808909,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 10.47673206193811,
+      "yMm": -51.61295624610896,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -19.223790253160143,
+      "yMm": 19.26898065276563,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": 22.584554015954087,
+      "yMm": 28.830898184006436,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 46.28684510127123,
+      "yMm": -14.903312475998748,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -26.64893512669513,
+      "yMm": -10.371660279882203,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 11.241954019978815,
+      "yMm": 50.12694335520478,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 23.21559690017294,
+      "yMm": 19.019996125458068,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -28.664482025556868,
+      "yMm": -4.1657507782820105,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -18.2398277100631,
+      "yMm": 43.381280186000765,
+      "outerRadiusMm": 58,
+      "luminance": 0
+    },
+    {
+      "xMm": -10.410790266473558,
+      "yMm": 35.9286775094709,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 20.875417990229167,
+      "yMm": 1.5452068828956085,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 23.965753948127652,
+      "yMm": -0.4404725571422332,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 10.018574218989968,
+      "yMm": -23.825312285186147,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 34.87599164369067,
+      "yMm": -14.895637352565748,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 23.547112320152035,
+      "yMm": -13.140917309542711,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -16.225773318724812,
+      "yMm": 26.27760690246449,
+      "outerRadiusMm": 57.456789,
+      "luminance": 188
+    },
+    {
+      "xMm": -19.8188042942268,
+      "yMm": -39.22659461049597,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -34.15303990868856,
+      "yMm": 28.451160189215148,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 17.040918369853205,
+      "yMm": 26.710868801942542,
+      "outerRadiusMm": 58,
+      "luminance": 187
+    },
+    {
+      "xMm": 26.535129070085087,
+      "yMm": -47.36396297616915,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": -36.17170920103521,
+      "yMm": 42.91563101525758,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 53.7067749639745,
+      "yMm": -10.599433408749071,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 34.738130601672175,
+      "yMm": 1.4567807486548763,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -14.741162977580949,
+      "yMm": 25.108817481433626,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 4.367528430815793,
+      "yMm": -40.62487339594178,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -15.265993054329178,
+      "yMm": 43.54435678973209,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 23.568089586461156,
+      "yMm": -19.670916267851656,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 30.925258496190356,
+      "yMm": -44.450028829307286,
+      "outerRadiusMm": 57.456789,
+      "luminance": 0
+    },
+    {
+      "xMm": 16.010846133528023,
+      "yMm": 42.99588206992312,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -20.90380378627367,
+      "yMm": -19.539353760094414,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 21.34961154996651,
+      "yMm": -40.129797229499985,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -15.45494396974368,
+      "yMm": 46.500957327250205,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -30.50099808703575,
+      "yMm": 0.1846305252174368,
+      "outerRadiusMm": 58,
+      "luminance": 0
+    },
+    {
+      "xMm": -36.58594333080163,
+      "yMm": -20.738049457162344,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 21.621597053788314,
+      "yMm": -30.696730608084724,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -26.965250406122934,
+      "yMm": -8.797137876648122,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -23.868270550338778,
+      "yMm": -26.02031836587771,
+      "outerRadiusMm": 58,
+      "luminance": 0
+    },
+    {
+      "xMm": -18.482834702377563,
+      "yMm": -27.31338906585424,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 15.599760929266576,
+      "yMm": 17.552809305472675,
+      "outerRadiusMm": 58,
+      "luminance": 21
+    },
+    {
+      "xMm": 27.326855076732784,
+      "yMm": 33.21869647093791,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 26.181299736485908,
+      "yMm": 32.677118759861735,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -29.26312363508365,
+      "yMm": 18.63172726379164,
+      "outerRadiusMm": 57.456789,
+      "luminance": 224
+    },
+    {
+      "xMm": 28.536222553940213,
+      "yMm": -2.732395656061567,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -1.691651253045716,
+      "yMm": -22.36960309760031,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": 16.63896296050871,
+      "yMm": -46.201587595097266,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 36.19623701110341,
+      "yMm": 29.44644962584084,
+      "outerRadiusMm": 57.456789,
+      "luminance": 13
+    },
+    {
+      "xMm": -15.661571362924365,
+      "yMm": 53.174794242207874,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 18.842702663780873,
+      "yMm": 18.25526192091472,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    },
+    {
+      "xMm": -29.7864375507586,
+      "yMm": -30.261779372285538,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": 34.601068631312764,
+      "yMm": -30.60262081067464,
+      "outerRadiusMm": 57.456789,
+      "luminance": 217
+    },
+    {
+      "xMm": -19.51842443568767,
+      "yMm": -30.367445036359978,
+      "outerRadiusMm": 58,
+      "luminance": 255
+    },
+    {
+      "xMm": -17.071267014455444,
+      "yMm": -50.03116115846314,
+      "outerRadiusMm": 57.456789,
+      "luminance": 255
+    }
+  ],
+  "progressSamples": [
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0,
+      "startAngleDegrees": 17,
+      "radiusMm": 24.00123,
+      "angleRadians": 0.29670597283903605,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.03125,
+      "startAngleDegrees": 17,
+      "radiusMm": 25.746905768432537,
+      "angleRadians": -14873.167924788786,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.0625,
+      "startAngleDegrees": 17,
+      "radiusMm": 27.382859664052393,
+      "angleRadians": -28799.93564456791,
+      "luminance": 0
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.09375,
+      "startAngleDegrees": 17,
+      "radiusMm": 28.927457183320662,
+      "angleRadians": -41940.06908889703,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.125,
+      "startAngleDegrees": 17,
+      "radiusMm": 30.3944366086052,
+      "angleRadians": -54413.11170327098,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.15625,
+      "startAngleDegrees": 17,
+      "radiusMm": 31.794395822848493,
+      "angleRadians": -66311.13388059675,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.1875,
+      "startAngleDegrees": 17,
+      "radiusMm": 33.135715728733125,
+      "angleRadians": -77706.82996533069,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.21875,
+      "startAngleDegrees": 17,
+      "radiusMm": 34.42516117182558,
+      "angleRadians": -88658.78382328946,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.25,
+      "startAngleDegrees": 17,
+      "radiusMm": 35.66828722894608,
+      "angleRadians": -99215.026482673,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.28125,
+      "startAngleDegrees": 17,
+      "radiusMm": 36.86972280144626,
+      "angleRadians": -109415.51769584526,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.3125,
+      "startAngleDegrees": 17,
+      "radiusMm": 38.03337398816512,
+      "angleRadians": -119293.92431619352,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.34375,
+      "startAngleDegrees": 17,
+      "radiusMm": 39.162573354253524,
+      "angleRadians": -128878.92466894565,
+      "luminance": 0
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.375,
+      "startAngleDegrees": 17,
+      "radiusMm": 40.2601917197928,
+      "angleRadians": -138195.1847331355,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.40625,
+      "startAngleDegrees": 17,
+      "radiusMm": 41.32872337168858,
+      "angleRadians": -147264.1017331824,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.4375,
+      "startAngleDegrees": 17,
+      "radiusMm": 42.370352039941594,
+      "angleRadians": -156104.37947662847,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.46875,
+      "startAngleDegrees": 17,
+      "radiusMm": 43.38700269625511,
+      "angleRadians": -164732.47974609156,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.5,
+      "startAngleDegrees": 17,
+      "radiusMm": 44.38038273203042,
+      "angleRadians": -173162.9808918695,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.53125,
+      "startAngleDegrees": 17,
+      "radiusMm": 45.352015063560316,
+      "angleRadians": -181408.8659247491,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.5625,
+      "startAngleDegrees": 17,
+      "radiusMm": 46.30326501970374,
+      "angleRadians": -189481.75634020433,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.59375,
+      "startAngleDegrees": 17,
+      "radiusMm": 47.235362383360204,
+      "angleRadians": -197392.10366591596,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.625,
+      "startAngleDegrees": 17,
+      "radiusMm": 48.149419614201655,
+      "angleRadians": -205149.34771363207,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.65625,
+      "startAngleDegrees": 17,
+      "radiusMm": 49.046447032090086,
+      "angleRadians": -212762.0483453908,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.6875,
+      "startAngleDegrees": 17,
+      "radiusMm": 49.9273655592187,
+      "angleRadians": -220237.99597700237,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.71875,
+      "startAngleDegrees": 17,
+      "radiusMm": 50.793017484667146,
+      "angleRadians": -227584.30486661728,
+      "luminance": 0
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.75,
+      "startAngleDegrees": 17,
+      "radiusMm": 51.6441756143881,
+      "angleRadians": -234807.4923559851,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.78125,
+      "startAngleDegrees": 17,
+      "radiusMm": 52.48155109338471,
+      "angleRadians": -241913.5465655101,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.8125,
+      "startAngleDegrees": 17,
+      "radiusMm": 53.30580012849242,
+      "angleRadians": -248907.9845344473,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.84375,
+      "startAngleDegrees": 17,
+      "radiusMm": 54.11752979512111,
+      "angleRadians": -255795.90240406521,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.875,
+      "startAngleDegrees": 17,
+      "radiusMm": 54.91730307621316,
+      "angleRadians": -262582.01893515885,
+      "luminance": 203
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.90625,
+      "startAngleDegrees": 17,
+      "radiusMm": 55.7056432541078,
+      "angleRadians": -269270.7134107301,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.9375,
+      "startAngleDegrees": 17,
+      "radiusMm": 56.483037754188246,
+      "angleRadians": -275866.05878434755,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.96875,
+      "startAngleDegrees": 17,
+      "radiusMm": 57.24994152180254,
+      "angleRadians": -282371.85078308254,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "cw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 1,
+      "startAngleDegrees": 17,
+      "radiusMm": 58.00678,
+      "angleRadians": -288791.63355231535,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0,
+      "startAngleDegrees": 17,
+      "radiusMm": 24.00123,
+      "angleRadians": 0.29670597283903605,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.03125,
+      "startAngleDegrees": 17,
+      "radiusMm": 25.746905768432537,
+      "angleRadians": 14873.761336734466,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.0625,
+      "startAngleDegrees": 17,
+      "radiusMm": 27.382859664052393,
+      "angleRadians": 28800.52905651359,
+      "luminance": 0
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.09375,
+      "startAngleDegrees": 17,
+      "radiusMm": 28.927457183320662,
+      "angleRadians": 41940.66250084271,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.125,
+      "startAngleDegrees": 17,
+      "radiusMm": 30.3944366086052,
+      "angleRadians": 54413.70511521666,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.15625,
+      "startAngleDegrees": 17,
+      "radiusMm": 31.794395822848493,
+      "angleRadians": 66311.72729254243,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.1875,
+      "startAngleDegrees": 17,
+      "radiusMm": 33.135715728733125,
+      "angleRadians": 77707.42337727637,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.21875,
+      "startAngleDegrees": 17,
+      "radiusMm": 34.42516117182558,
+      "angleRadians": 88659.37723523514,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.25,
+      "startAngleDegrees": 17,
+      "radiusMm": 35.66828722894608,
+      "angleRadians": 99215.61989461868,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.28125,
+      "startAngleDegrees": 17,
+      "radiusMm": 36.86972280144626,
+      "angleRadians": 109416.11110779094,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.3125,
+      "startAngleDegrees": 17,
+      "radiusMm": 38.03337398816512,
+      "angleRadians": 119294.5177281392,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.34375,
+      "startAngleDegrees": 17,
+      "radiusMm": 39.162573354253524,
+      "angleRadians": 128879.51808089133,
+      "luminance": 0
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.375,
+      "startAngleDegrees": 17,
+      "radiusMm": 40.2601917197928,
+      "angleRadians": 138195.7781450812,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.40625,
+      "startAngleDegrees": 17,
+      "radiusMm": 41.32872337168858,
+      "angleRadians": 147264.6951451281,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.4375,
+      "startAngleDegrees": 17,
+      "radiusMm": 42.370352039941594,
+      "angleRadians": 156104.97288857415,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.46875,
+      "startAngleDegrees": 17,
+      "radiusMm": 43.38700269625511,
+      "angleRadians": 164733.07315803724,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.5,
+      "startAngleDegrees": 17,
+      "radiusMm": 44.38038273203042,
+      "angleRadians": 173163.57430381517,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.53125,
+      "startAngleDegrees": 17,
+      "radiusMm": 45.352015063560316,
+      "angleRadians": 181409.45933669477,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.5625,
+      "startAngleDegrees": 17,
+      "radiusMm": 46.30326501970374,
+      "angleRadians": 189482.34975215,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.59375,
+      "startAngleDegrees": 17,
+      "radiusMm": 47.235362383360204,
+      "angleRadians": 197392.69707786164,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.625,
+      "startAngleDegrees": 17,
+      "radiusMm": 48.149419614201655,
+      "angleRadians": 205149.94112557775,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.65625,
+      "startAngleDegrees": 17,
+      "radiusMm": 49.046447032090086,
+      "angleRadians": 212762.64175733647,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.6875,
+      "startAngleDegrees": 17,
+      "radiusMm": 49.9273655592187,
+      "angleRadians": 220238.58938894805,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.71875,
+      "startAngleDegrees": 17,
+      "radiusMm": 50.793017484667146,
+      "angleRadians": 227584.89827856296,
+      "luminance": 0
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.75,
+      "startAngleDegrees": 17,
+      "radiusMm": 51.6441756143881,
+      "angleRadians": 234808.08576793078,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.78125,
+      "startAngleDegrees": 17,
+      "radiusMm": 52.48155109338471,
+      "angleRadians": 241914.13997745578,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.8125,
+      "startAngleDegrees": 17,
+      "radiusMm": 53.30580012849242,
+      "angleRadians": 248908.577946393,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.84375,
+      "startAngleDegrees": 17,
+      "radiusMm": 54.11752979512111,
+      "angleRadians": 255796.4958160109,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.875,
+      "startAngleDegrees": 17,
+      "radiusMm": 54.91730307621316,
+      "angleRadians": 262582.61234710447,
+      "luminance": 225
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.90625,
+      "startAngleDegrees": 17,
+      "radiusMm": 55.7056432541078,
+      "angleRadians": 269271.30682267575,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.9375,
+      "startAngleDegrees": 17,
+      "radiusMm": 56.483037754188246,
+      "angleRadians": 275866.6521962932,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 0.96875,
+      "startAngleDegrees": 17,
+      "radiusMm": 57.24994152180254,
+      "angleRadians": 282372.44419502816,
+      "luminance": 255
+    },
+    {
+      "generated": {
+        "innerRadiusMm": 24.00123,
+        "outerRadiusMm": 58.00678,
+        "totalSectors": 2295104,
+        "channelBitLengthNm": 133.33,
+        "pitchLinear": 0.02,
+        "pitchQuadratic": -0.03,
+        "pitchCubic": 0.015,
+        "direction": "ccw",
+        "directionConvention": "disc-xy-y-up-recording-side",
+        "startLba": 0
+      },
+      "progress": 1,
+      "startAngleDegrees": 17,
+      "radiusMm": 58.00678,
+      "angleRadians": 288792.226964261,
+      "luminance": 255
+    }
+  ]
+}

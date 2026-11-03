@@ -11,6 +11,8 @@ var schemaTypes = new (string Name, Type Type)[] { ("geometry", typeof(GeometryP
     ("photo-session-v2", typeof(PhotoSession)),
     ("trace-fit-review", typeof(TraceFitReview)), ("compensation-profile", typeof(CompensationProfile)),
     ("dense-analysis", typeof(DenseAnalysis)),
+    ("fine-target-plan", typeof(FineTargetPlan)), ("reference-target-simulation", typeof(ReferenceTargetSimulation)),
+    ("two-disc-task", typeof(TwoDiscManifest)), ("two-disc-consistency", typeof(TwoDiscConsistency)),
     ("fit-result", typeof(FitResult)), ("forward-prediction", typeof(PredictionResult)) };
 static JsonNode ExportSchema(string name, Type type)
 {
@@ -298,6 +300,7 @@ Test("external snapshot freezes copied source bytes and survives relocation", ()
 PhotoChecks.Register(Test);
 TraceFitChecks.Register(Test);
 DenseChecks.Run(Test);
+ReferenceTargetChecks.Register(Test, root);
 Console.WriteLine($"Independent oracle max angle error: {worstAngle:G6} rad; max inverse radius error: {worstRadius:G6} mm.");
 Console.WriteLine($"{count - failures}/{count} checks passed.");
 return failures == 0 ? 0 : 1;

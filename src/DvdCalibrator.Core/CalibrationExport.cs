@@ -15,7 +15,8 @@ public static class CalibrationExport
     public static bool ProjectCompatible(GeometryParameters p) => p.Direction == SpiralDirection.Cw
         && p.ChannelBitLengthNm == 133.3 && p.StartLba == 0 && p.TotalSectors % 16 == 0;
 
-    public static void Write(string output, TraceFitReview review, PhotoSession session, CancellationToken token = default)
+    public static void Write(string output, TraceFitReview review, PhotoSession session, CancellationToken token = default,
+        Action<string>? additionalArtifacts = null)
     {
         review.Validate(review.Result.Generated, session.SnapshotSha256, session);
         if (!review.IsConfirmed) throw new ArgumentException("请先检查整条预测曲线并确认当前候选，再导出配置。");
@@ -49,6 +50,7 @@ public static class CalibrationExport
                 if (loaded.Geometry != project.Geometry) throw new IOException("目标版本工程回读参数不一致。");
             }
             File.WriteAllText(Path.Combine(folder, "report.html"), Report(profile, review));
+            token.ThrowIfCancellationRequested(); additionalArtifacts?.Invoke(folder);
         }, token);
     }
 

@@ -196,6 +196,7 @@ internal static class Program
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
             using var stream = File.Create(Path.Combine(output, "dense-desktop.png")); encoder.Save(stream);
         });
+        TwoDiscChecks.Register(Test, output);
         Console.WriteLine($"{passed}/{total} Windows imaging checks passed. Artifacts: {output}");
         return passed == total ? 0 : 1;
     }

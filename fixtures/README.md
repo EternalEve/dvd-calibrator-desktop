@@ -36,3 +36,10 @@ solve --image upstream-input.bmp --iso-output .local/upstream-fixture.iso
 `SyntheticPhoto.CreateTraceDemo()` 的冻结生成记录和已知投影描线，供 CLI 拟合/导出回归。
 它们来自隐藏半径 24.0002/58.0004 mm 的完整模型，不是实拍测量值。
 Windows 检查会输出可恢复的 `trace-fit.dvdphoto`、源图、配置、工程和报告。
+
+`upstream-target-contract.json` 记录固定上游实际 `RasterImage.SampleDisc` 与轨迹映射的采样结果，
+包含 128 个空间采样点和 66 组 CW/CCW、非零起始角、非默认位长及非零轨距形状的映射结果。
+生成时实际逐项比较了 20,000 个原图采样点。`upstream-reference-fast-fill.iso.json` 是同次实际引擎运行的
+16 扇区旁车，输入为保持原始哈希的 `target_slim.png`；ISO 仅留在忽略的 artifacts 目录。
+复现用 `tools/Test-UpstreamContract.ps1`，输出到新目录，不自动覆盖仓库 fixture。
+这些是软件契约验证样例，不能当作真实盘片、足容量刻录或光学成像验证。
