@@ -64,9 +64,11 @@ public sealed class TwoDiscTask
         if (!Guid.TryParseExact(Id, "N", out _) || EvidenceMode is not ("simulation" or "external-record-required"))
             throw new ArgumentException("两盘任务身份或证据模式无效。");
         Plan.Validate();
+        if (Coarse.Snapshot.Hash != Plan.Coarse.SnapshotSha256 || RecordJson.Hash(Coarse.Session) != Plan.Coarse.SessionSha256)
+            throw new CalibrationInputException("coarse-plan-stale", "第一张输入已改变，请重新创建第二张计划。");
         var current = Evidence(Coarse, Plan.Coarse.SelectedCandidateId, Plan.Coarse.Kind);
         if (RecordJson.Hash(current) != RecordJson.Hash(Plan.Coarse) || Disc(Coarse.Snapshot) != Plan.Disc)
-            throw new ArgumentException("第一张输入或候选已改变，请重新创建第二张计划。");
+            throw new CalibrationInputException("coarse-plan-stale", "第一张输入或候选已改变，请重新创建第二张计划。");
         if (Fine is not null) ValidateFine(Fine);
     }
     public void ConfirmPlan() { Validate(); Plan = Plan.Confirm(); }
@@ -83,13 +85,13 @@ public sealed class TwoDiscTask
             || fine.Snapshot.Geometry != Plan.Generated || ReferenceEquals(fine, Coarse)
             || fine.Photo.Metadata.OriginalSha256 == Coarse.Photo.Metadata.OriginalSha256
             || fine.Photo.Metadata.OrientedPixelsSha256 == Coarse.Photo.Metadata.OrientedPixelsSha256)
-            throw new ArgumentException("第二张必须关联已确认的 G1，不能复用第一张 G0 或其照片任务。");
+            throw new CalibrationInputException("fine-generation-mismatch", "第二张必须关联已确认的 G1，不能复用第一张 G0 或其照片任务。");
         using var doc = RecordJson.ParseDocument(Encoding.UTF8.GetString(fine.Snapshot.Files["generation.json"]).TrimStart('\uFEFF'));
         if (doc.RootElement.GetProperty("recordType").GetString() == "reference-target-simulation")
         {
             var simulation = RecordJson.Parse<ReferenceTargetSimulation>(doc.RootElement.GetRawText()); simulation.Validate();
             if (EvidenceMode != "simulation" || simulation.PlanSha256 != Plan.ContentSha256 || simulation.Disc != Plan.Disc)
-                throw new ArgumentException("模拟照片不能用于要求实际生成记录的两盘任务。");
+                throw new CalibrationInputException("fine-simulation-in-actual", "模拟照片不能用于要求实际生成记录的两盘任务。");
         }
         else if (doc.RootElement.GetProperty("recordType").GetString() == "external-generation-snapshot")
         {
@@ -149,7 +151,7 @@ public sealed class TwoDiscTask
     public void ExportFinal(string output, CancellationToken token = default)
     {
         var consistency = CheckConsistency();
-        if (consistency.Status != "final-review") throw new ArgumentException("两盘一致性或第二张分辨率未通过检查：" + consistency.Status + "。保留独立结果，不强行共享参数。");
+        if (consistency.Status != "final-review") throw new CalibrationInputException(consistency.Status, "两盘一致性或第二张分辨率未通过检查。保留第二张独立结果，不能作为共享最终配置导出。");
         CalibrationExport.Write(output, Fine!.Fit!, Fine.Session, token, folder =>
         {
             RecordJson.WriteNew(Path.Combine(folder, "fine-target-plan.json"), Plan);

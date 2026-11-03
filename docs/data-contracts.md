@@ -138,3 +138,14 @@ metadata 记录原始/定向文件哈希、RGB 像素哈希、原始/定向尺�
 `two-disc-consistency` v1 保存跨盘模型形状 RMS/最大差以及第二张实测投影的有效像素与法向线宽。
 最终两盘导出必须有第二张确认且一致性通过，沿用完整 `compensation-profile`，另附 Plan、两张照片任务及两盘报告。
 所有输出 `physicalValidation=pending`；计划输入的预计分辨率与第二张由单应估计的分辨率分别保存，不互相替代。
+
+## 操作诊断与模拟报告
+
+`CalibrationInputException` 保持 `ArgumentException` 兼容，额外提供稳定 `Code`，供输入次序、遮罩、覆盖、生成记录和计划失效等错误分类。
+`CalibrationIssue` 为 `code/title/action`，结构见 `calibration-issue.schema.json`。桌面、CLI 和诊断报告共享此映射，
+已有候选 `RejectionReasons` 仍存稳定代码，不把本地化文本写回或改变确认哈希。未知异常不伪装为正确拒绝。
+
+`two-disc-simulation-matrix` v1 是验证工具产物，不是可导入的标定任务。每项保存固定场景/种子、真值、
+已得到的完整粗/精参数、原图像素哈希、误差、观察阶段/状态、问题与纠正动作。
+接受断言、带精确原因的拒绝断言、边界探测分别标记；JSON 不删除未通过项，CSV 缺失指标留空而非填写零误差。
+完整观测只为有界样本保存 `.dvdcal`，其他用例可按场景和种子重建。所有矩阵产物保持 `physicalValidation=pending`。

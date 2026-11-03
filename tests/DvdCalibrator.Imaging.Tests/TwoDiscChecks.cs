@@ -1,5 +1,6 @@
 using System.IO;
 using System.IO.Compression;
+using System.Collections.Immutable;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -108,6 +109,28 @@ internal static class TwoDiscChecks
             Check(objects.OfType<Button>().Any(b => b.Content is string s && s == "导出两盘最终配置" && b.IsEnabled), "final workflow export not enabled");
             var bitmap = new RenderTargetBitmap(1450, 1100, 96, 96, PixelFormats.Pbgra32); bitmap.Render(content);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); using var stream = File.Create(Path.Combine(output, "two-disc-desktop.png")); encoder.Save(stream);
+        });
+        test("desktop failed holdout explains corrective action and keeps confirmation disabled", () =>
+        {
+            var loaded = TwoDiscTask.Load(package); var fine = loaded.Fine!; var h = fine.Session.GetTransform();
+            var validation = fine.Session.Traces.First(t => t.Id == "validation-180");
+            var changed = validation.Points.Select(p =>
+            { var d = h.SourceToDisc(p); return h.DiscToSource(new(-d.Y, d.X)); }).ToImmutableArray();
+            fine.Session = fine.Session.WithTraces(fine.Session.Traces.Select(t => t.Id == validation.Id ? t with { Points = changed } : t).ToImmutableArray());
+            var review = fine.FitTrace(); Check(!review.Selected.EligibleForReview, "wrong validation arm passed"); fine.AttachFit(review);
+            string failedPackage = Path.Combine(output, "failure-guidance.dvdcal"); loaded.SaveNew(failedPackage);
+            loaded = TwoDiscTask.Load(failedPackage);
+            Check(loaded.Fine?.Fit?.IsConfirmed == false, "restored failed candidate became confirmed");
+            var window = new DvdCalibrator.App.MainWindow(); var content = (FrameworkElement)window.Content;
+            content.Measure(new Size(1450, 1100)); content.Arrange(new Rect(0, 0, 1450, 1100)); content.UpdateLayout();
+            window.LoadTwoDiscTask(loaded); content.Measure(new Size(1450, 1100)); content.Arrange(new Rect(0, 0, 1450, 1100)); content.UpdateLayout();
+            IEnumerable<DependencyObject> Descendants(DependencyObject parent)
+            { for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++) { var child = VisualTreeHelper.GetChild(parent, i); yield return child; foreach (var nested in Descendants(child)) yield return nested; } }
+            var objects = Descendants(content).ToArray();
+            Check(objects.OfType<TextBlock>().Any(t => t.Text.Contains("不要删除留出点", StringComparison.Ordinal)), "actionable guidance missing from interface");
+            Check(objects.OfType<Button>().Any(b => b.Content is string s && s == "确认候选曲线" && !b.IsEnabled), "failure became confirmable");
+            var bitmap = new RenderTargetBitmap(1450, 1100, 96, 96, PixelFormats.Pbgra32); bitmap.Render(content);
+            var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); using var stream = File.Create(Path.Combine(output, "failure-guidance-desktop.png")); encoder.Save(stream);
         });
     }
 }

@@ -34,7 +34,7 @@ public sealed record GeneratorInfo(string Name, string Version, string SourceKin
 {
     public void Validate()
     {
-        if (Name != "DvdCalibrator" || Version is not ("0.1.0" or "0.2.0" or "0.3.0" or "0.4.0" or "0.5.0") || SourceKind != "synthetic")
+        if (Name != "DvdCalibrator" || Version is not ("0.1.0" or "0.2.0" or "0.3.0" or "0.4.0" or "0.5.0" or "0.6.0") || SourceKind != "synthetic")
             throw new ArgumentException("第一阶段完整快照仅支持本工具的合成生成记录；外部记录单独解析并标明缺失项。");
     }
 }
@@ -47,7 +47,7 @@ public sealed record GenerationSnapshot(int SchemaVersion, string RecordType, st
         PatternDefinition pattern)
     {
         var snapshot = new GenerationSnapshot(1, "generation-snapshot", id, "frozen", disc, generated, pattern,
-            new("DvdCalibrator", "0.5.0", "synthetic"), "");
+            new("DvdCalibrator", "0.6.0", "synthetic"), "");
         snapshot = snapshot with { ContentSha256 = RecordJson.Hash(snapshot) };
         snapshot.Validate();
         return snapshot;

@@ -103,7 +103,7 @@ public sealed partial class MainWindow
         if (twoDisc is null || calculation is not null) return;
         var result = twoDisc.CheckConsistency();
         SetStatus($"两盘形状差 RMS {result.CoarseShapeRmsMm:F4} mm / 最大 {result.CoarseShapeMaximumMm:F4} mm；第二张有效线宽 {result.FineLineWidthPixels:F2} px。"
-            + (result.Status == "final-review" ? "软件一致性检查通过，可导出带两盘来源的最终配置；实刻仍待验证。" : "未通过跨盘一致性或分辨率检查，保留第二张独立精调结果，请核对记录、盘片和拍摄条件。"));
+            + (result.Status == "final-review" ? "软件一致性检查通过，可导出带两盘来源的最终配置；实刻仍待验证。" : CalibrationGuidance.Describe([CalibrationGuidance.ForCode(result.Status)])));
     }
     public void LoadTwoDiscTask(TwoDiscTask next)
     {
@@ -120,7 +120,7 @@ public sealed partial class MainWindow
             SetStatus("两盘软件演示：第一张粗调与 G1 计划已模拟确认，第二张使用固定 target_slim 原图和独立照片。点击“拟合描线”，核对并确认候选后可导出两盘最终配置。");
         }
         catch (OperationCanceledException) { SetStatus("两盘演示创建已取消，原有任务保留。"); }
-        catch (Exception e) when (Expected(e)) { SetStatus(e.Message); }
+        catch (Exception e) when (Expected(e)) { SetStatus(CalibrationGuidance.Describe(e)); }
         finally { calculation.Dispose(); calculation = null; Refresh(); if (task?.Session.Rectification is not null && IsLoaded && rectified.Source is null) _ = RefreshPreviews(); }
     }
     private void RefreshTwoDisc()
@@ -164,8 +164,7 @@ public sealed partial class MainWindow
         }
         workflowDetail.Text = $"{(twoDisc.EvidenceMode == "simulation" ? "软件模拟 · " : "实际记录流程 · ")}{state} · 当前{(ReferenceEquals(task, twoDisc.Fine) ? "第二张 G1" : "第一张 G0")}\n"
             + $"G1 ri {plan.Generated.InnerRadiusMm:F6} / ro {plan.Generated.OuterRadiusMm:F6} mm · 候选差 {plan.Forecast.MaximumCandidateDifferenceMm:F3} mm · 预计线宽 {plan.Forecast.MinimumLineWidthPixels:F1} px · 实刻待验证。";
-        if (plan.Forecast.Status != "plan-review") workflowDetail.Text += plan.Forecast.Status switch
-        { "candidate-ambiguous" => " 候选分歧，请补充第一张证据。", "photo-resolution-insufficient" => " 预计分辨率不足，请调整拍摄计划后重新创建。", _ => " 预测采样不足，需要补充证据。" };
+        if (plan.Forecast.Status != "plan-review") workflowDetail.Text += " " + CalibrationGuidance.Describe([CalibrationGuidance.ForCode(plan.Forecast.Status)]);
         bool current = RecordJson.Hash(twoDisc.Coarse.Session) == plan.Coarse.SessionSha256
             && (plan.Coarse.Kind == "trace" ? twoDisc.Coarse.Fit is not null && RecordJson.Hash(twoDisc.Coarse.Fit) == plan.Coarse.ResultSha256
                 : twoDisc.Coarse.Dense is not null && RecordJson.Hash(twoDisc.Coarse.Dense) == plan.Coarse.ResultSha256);

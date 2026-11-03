@@ -49,7 +49,7 @@ public sealed partial class MainWindow : Window
         var root = new DockPanel { Background = Background }; Content = root;
         var heading = new StackPanel { Margin = new(16, 12, 16, 4) };
         heading.Children.Add(new TextBlock { Text = "DVD CALIBRATOR", FontSize = 23, FontWeight = FontWeights.SemiBold });
-        heading.Children.Add(new TextBlock { Text = "05  标靶契约、两盘任务与独立精调    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) });
+        heading.Children.Add(new TextBlock { Text = "06  两盘标定与操作诊断    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) });
         DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading);
         var toolbar = new WrapPanel { Margin = new(12, 0, 12, 4) };
         toolbar.Children.Add(Button("打开生成快照", OpenSnapshot)); toolbar.Children.Add(Button("导入照片", ImportPhoto));
@@ -116,7 +116,7 @@ public sealed partial class MainWindow : Window
     private static Button Button(string text, Action action)
     {
         var button = new Button { Content = text }; System.Windows.Automation.AutomationProperties.SetName(button, text);
-        button.Click += (_, _) => { try { action(); } catch (Exception e) when (Expected(e)) { MessageBox.Show(e.Message, "无法完成操作", MessageBoxButton.OK, MessageBoxImage.Information); } };
+        button.Click += (_, _) => { try { action(); } catch (Exception e) when (Expected(e)) { MessageBox.Show(CalibrationGuidance.Describe(e), "无法完成操作", MessageBoxButton.OK, MessageBoxImage.Information); } };
         return button;
     }
     private static bool Expected(Exception e) => e is ArgumentException or IOException or UnauthorizedAccessException
@@ -339,7 +339,7 @@ public sealed partial class MainWindow : Window
             await RenderPreviews(); SetStatus("矫正计算完成。请核对正视预览及橙色轮廓；满意后点击“确认矫正”。");
         }
         catch (OperationCanceledException) { SetStatus("计算已取消，原图与标注保留。"); }
-        catch (Exception e) when (Expected(e)) { ClearPreviews(); SetStatus(e.Message); }
+        catch (Exception e) when (Expected(e)) { ClearPreviews(); SetStatus(CalibrationGuidance.Describe(e)); }
         finally { calculation.Dispose(); calculation = null; Refresh(); }
     }
     private async Task RefreshPreviews()
@@ -348,7 +348,7 @@ public sealed partial class MainWindow : Window
         calculation = new(); Refresh();
         try { await RenderPreviews(); }
         catch (OperationCanceledException) { SetStatus("预览已取消。"); }
-        catch (Exception e) when (Expected(e)) { ClearPreviews(); SetStatus(e.Message); }
+        catch (Exception e) when (Expected(e)) { ClearPreviews(); SetStatus(CalibrationGuidance.Describe(e)); }
         finally { calculation.Dispose(); calculation = null; Refresh(); }
     }
     private async Task RenderPreviews()
@@ -377,10 +377,10 @@ public sealed partial class MainWindow : Window
             input.AttachFit(review); dirty = true; Draw();
             SetStatus(review.Selected.EligibleForReview
                 ? "拟合完成。橙线为完整模型预测；请检查点间走向与留出区域，确认没有漏圈或换臂后再确认候选。"
-                : "候选尚未通过检查，请查看留出误差、搜索边界或点间绕圈提示，补点或核对生成记录。");
+                : CalibrationGuidance.Describe(CalibrationGuidance.ForTrace(review)));
         }
         catch (OperationCanceledException) { SetStatus("描线拟合已取消，照片与观测保留。"); }
-        catch (Exception e) when (Expected(e)) { SetStatus(e.Message); }
+        catch (Exception e) when (Expected(e)) { SetStatus(CalibrationGuidance.Describe(e)); }
         finally { calculation.Dispose(); calculation = null; Refresh(); }
     }
     private void ConfirmTraceFit()
@@ -397,10 +397,11 @@ public sealed partial class MainWindow : Window
         {
             var result = await Task.Run(() => input.AnalyzeDense(token: calculation.Token));
             input.AttachDense(result); dirty = true; Draw();
-            SetStatus("密环分析完成：" + result.QualityStatus + "。紫线为完整模型，蓝线为可观测片段；请导出诊断检查所有候选、圈数分支和下一张预测。");
+            var issues = CalibrationGuidance.ForDense(result);
+            SetStatus(issues.IsEmpty ? "密环分析完成。紫线为完整模型，蓝线为可观测片段；请导出诊断核对所有候选和下一张预测。" : CalibrationGuidance.Describe(issues));
         }
         catch (OperationCanceledException) { SetStatus("密环分析已取消，照片与已保存观测保留。"); }
-        catch (Exception e) when (Expected(e)) { SetStatus(e.Message); }
+        catch (Exception e) when (Expected(e)) { SetStatus(CalibrationGuidance.Describe(e)); }
         finally { calculation.Dispose(); calculation = null; Refresh(); }
     }
     private void ExportDense()
@@ -437,17 +438,11 @@ public sealed partial class MainWindow : Window
         traceConfirmButton.IsEnabled = review is not null && review.Selected.EligibleForReview && !review.IsConfirmed
             && review.Result.QualityStatus != "candidate-ambiguous" && calculation is null;
         profileButton.IsEnabled = review?.IsConfirmed == true && calculation is null;
-        string Explain(string reason) => reason switch
-        {
-            "search-boundary" => "最佳解接近搜索边界", "residual-or-holdout-failed" => "拟合或留出误差超限",
-            "higher-order-not-supported-by-holdout" => "高阶形状未改善留出数据", "between-point-turn-risk" => "点间预测转角过大，需要补点",
-            "curve-undersampled" => "预测曲线采样不足", _ => reason
-        };
         string State(string code) => code switch
         { "fit-review" => "待曲线核对", "model-mismatch" => "观测与模型尚不一致", "candidate-ambiguous" => "候选仍有歧义", _ => "搜索范围受限" };
         fitDetail.Text = review is null ? "主线至少 24 点、覆盖 60% 环带；末段 25% 留出。\n可补充明确对侧 180° 的独立检查线。"
             : $"{State(review.Result.QualityStatus)}  ·  {(review.IsConfirmed ? "候选已确认" : "请核对点间曲线")}\n训练 {review.Selected.TrainingRmsMm:F4} / 留出 {review.Selected.HoldoutRmsMm:F4} mm  ·  最大 {review.Selected.MaxErrorMm:F4} mm\nri {review.Selected.Parameters.InnerRadiusMm:F6} / ro {review.Selected.Parameters.OuterRadiusMm:F6} mm\nc1 {review.Selected.Parameters.PitchLinear:G5}  c2 {review.Selected.Parameters.PitchQuadratic:G5}  c3 {review.Selected.Parameters.PitchCubic:G5}\n搜索 ±{review.Result.SearchedRadiusRangeMm:G3} mm  ·  形状阶数 {review.Selected.ShapeOrder}  ·  参数相关 {review.Selected.ParameterCorrelation:F4}"
-                + (review.Selected.RejectionReasons.Length > 0 ? "\n未通过：" + string.Join("；", review.Selected.RejectionReasons.Select(Explain)) : "\n固定生成位长的等效补偿；实刻验证 pending。");
+                + (CalibrationGuidance.ForTrace(review) is { Length: > 0 } issues ? "\n" + CalibrationGuidance.Describe(issues) : "\n固定生成位长的等效补偿；实刻验证 pending。");
     }
     private void ClearPreviews() { rectified.Source = null; polar.Source = null; }
     private void Refresh()
@@ -463,7 +458,7 @@ public sealed partial class MainWindow : Window
         var dense = task?.Dense; var best = dense?.Candidates.FirstOrDefault(c => c.Supported);
         denseDetail.Text = dense is null ? "密环入口：已知解析半盘靶，可联合局部主边界描线。" :
             $"{DenseState(dense.QualityStatus)} · 片段 {dense.Observations.Fragments.Length} · 有效径向 {dense.Observations.UsableRadialFraction:P0}\n"
-            + (best is null ? "信息不足或模型失配，请查看诊断报告。" : $"ri {best.Parameters.InnerRadiusMm:F6} / ro {best.Parameters.OuterRadiusMm:F6} mm\n图像训练/留出 {best.TrainingImageError:F3} / {best.HoldoutImageError:F3} · 相位留出 {best.HoldoutPhaseRmsRadians:F3} rad\n{DenseState(dense.NextDisc?.Status ?? "photo-insufficient")}；实刻待验证。");
+            + (best is null ? CalibrationGuidance.Describe(CalibrationGuidance.ForDense(dense)) : $"ri {best.Parameters.InnerRadiusMm:F6} / ro {best.Parameters.OuterRadiusMm:F6} mm\n图像训练/留出 {best.TrainingImageError:F3} / {best.HoldoutImageError:F3} · 相位留出 {best.HoldoutPhaseRmsRadians:F3} rad\n{DenseState(dense.NextDisc?.Status ?? "photo-insufficient")}；实刻待验证。");
         if (task is null) { counts.Text = "未导入照片"; detail.Text = "1  打开冻结生成快照并导入照片\n2  标外缘/孔缘并确认矫正\n3  连续边界可描线拟合\n4  已知半盘可分析密环或混合观测\n5  核对报告、候选与完整预测"; return; }
         var s = task.Session;
         counts.Text = $"外缘 {s.OuterBoundary.Length} 点  ·  孔缘 {s.HoleBoundary.Length} 点  ·  遮罩 {s.Masks.Length} 处  ·  描线 {s.Traces.Sum(t => t.Points.Length)} 点";

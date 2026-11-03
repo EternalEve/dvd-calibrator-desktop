@@ -65,7 +65,7 @@ public sealed record FineTargetPlan(int SchemaVersion, string RecordType, string
             || r.LuminanceThreshold != Target.LuminanceThreshold || r.AlphaThreshold != Target.AlphaThreshold
             || r.OriginalRecord.GetProperty("psnOffset").GetString() != Target.PsnOffset
             || r.OriginalRecord.GetProperty("imageMapping").GetProperty("sampleEveryChannelBits").GetInt32() != Target.SampleEveryChannelBits)
-            throw new ArgumentException("第二张实际生成记录不匹配已确认 G1、标靶字节或生成契约；不能沿用 G0 或模拟记录。");
+            throw new CalibrationInputException("fine-generation-mismatch", "第二张实际生成记录不匹配已确认 G1、标靶字节或生成契约；不能沿用 G0 或模拟记录。");
     }
 
     private static FineTargetForecast Predict(CoarsePlanEvidence evidence, double pixelsPerMm)

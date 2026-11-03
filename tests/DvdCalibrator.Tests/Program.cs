@@ -13,6 +13,7 @@ var schemaTypes = new (string Name, Type Type)[] { ("geometry", typeof(GeometryP
     ("dense-analysis", typeof(DenseAnalysis)),
     ("fine-target-plan", typeof(FineTargetPlan)), ("reference-target-simulation", typeof(ReferenceTargetSimulation)),
     ("two-disc-task", typeof(TwoDiscManifest)), ("two-disc-consistency", typeof(TwoDiscConsistency)),
+    ("calibration-issue", typeof(CalibrationIssue)),
     ("fit-result", typeof(FitResult)), ("forward-prediction", typeof(PredictionResult)) };
 static JsonNode ExportSchema(string name, Type type)
 {
@@ -301,6 +302,7 @@ PhotoChecks.Register(Test);
 TraceFitChecks.Register(Test);
 DenseChecks.Run(Test);
 ReferenceTargetChecks.Register(Test, root);
+GuidanceChecks.Register(Test);
 Console.WriteLine($"Independent oracle max angle error: {worstAngle:G6} rad; max inverse radius error: {worstRadius:G6} mm.");
 Console.WriteLine($"{count - failures}/{count} checks passed.");
 return failures == 0 ? 0 : 1;

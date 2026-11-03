@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "title",
+    "action"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:calibration-issue:v1"
+}

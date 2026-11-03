@@ -5,4 +5,5 @@
   <Project Path="src/DvdCalibrator.App/DvdCalibrator.App.csproj" />
   <Project Path="tests/DvdCalibrator.Tests/DvdCalibrator.Tests.csproj" />
   <Project Path="tests/DvdCalibrator.Imaging.Tests/DvdCalibrator.Imaging.Tests.csproj" />
+  <Project Path="tools/SimulationMatrix/SimulationMatrix.csproj" />
 </Solution>

@@ -9,7 +9,7 @@ try
     if (args.Length == 0 || args is ["--help"] or ["help"])
     {
         Console.WriteLine("""
-            DvdCalibrator 0.5.0 — geometry, reference target contracts and trace fitting
+            DvdCalibrator 0.6.0 — geometry, reference target contracts and trace fitting
             demo --out NEW_FOLDER
             inspect --record SNAPSHOT_OR_DISCIMAGE_SIDECAR.json
             import-discimage --record SIDECAR.json --out NEW_FOLDER
@@ -211,7 +211,7 @@ try
 }
 catch (OperationCanceledException) { Console.Error.WriteLine("Cancelled."); return 130; }
 catch (Exception e) when (e is ArgumentException or JsonException or KeyNotFoundException or InvalidOperationException or FormatException or OverflowException)
-{ Console.Error.WriteLine($"Invalid input: {e.Message}"); return 2; }
+{ Console.Error.WriteLine($"Invalid input: {CalibrationGuidance.Describe(e)}"); return 2; }
 catch (Exception e) when (e is IOException or UnauthorizedAccessException)
 { Console.Error.WriteLine($"I/O failure: {e.Message}"); return 3; }
 

@@ -1,4 +1,4 @@
-param([switch]$SkipBuild)
+param([switch]$SkipBuild, [switch]$SkipSimulationMatrix)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path $PSScriptRoot -Parent
 Push-Location $projectRoot
@@ -15,4 +15,5 @@ try {
     & dotnet run --project tests/DvdCalibrator.Imaging.Tests -c Release --no-build
     if ($LASTEXITCODE -ne 0) { throw 'Windows imaging checks failed.' }
     & (Join-Path $PSScriptRoot 'Test-Cli.ps1')
+    if (-not $SkipSimulationMatrix) { & (Join-Path $PSScriptRoot 'Test-SimulationMatrix.ps1') -SkipBuild }
 } finally { Pop-Location }

@@ -376,16 +376,16 @@ public static class DenseAnalyzer
         foreach (var trace in session.Traces)
         {
             if (trace.Id is not ("line-1" or "validation-180") || trace.Points.Length is < 6 or > 600)
-                throw new ArgumentException("混合模式仅接受 6–600 点的主边界或已知对侧 180° 边界，可只覆盖稀疏片段。");
+                throw new CalibrationInputException("mixed-trace-point-count", "混合模式仅接受 6–600 点的主边界或已知对侧 180° 边界，可只覆盖稀疏片段。");
             var points = new List<(double R, double A)>();
             foreach (var p in trace.Points)
             {
-                if (PhotoRaster.IsMasked(p.X, p.Y, session.Masks)) throw new ArgumentException("混合描点位于遮罩内。");
+                if (PhotoRaster.IsMasked(p.X, p.Y, session.Masks)) throw new CalibrationInputException("trace-point-masked", "混合描点位于遮罩内。");
                 var d = transform.SourceToDisc(p); double r = Math.Sqrt(d.X * d.X + d.Y * d.Y), a = Math.Atan2(d.Y, d.X);
-                if (r is < 7.5 or > 60 || (points.Count > 0 && r - points[^1].R < .01)) throw new ArgumentException("混合描点必须严格从内向外排列。");
+                if (r is < 7.5 or > 60 || (points.Count > 0 && r - points[^1].R < .01)) throw new CalibrationInputException("trace-radius-order", "混合描点必须严格从内向外排列。");
                 if (points.Count > 0)
                 {
-                    double change = Wrap(a - points[^1].A); if (Math.Abs(change) >= Math.PI / 2) throw new ArgumentException("混合描线相邻转角过大，请补点。");
+                    double change = Wrap(a - points[^1].A); if (Math.Abs(change) >= Math.PI / 2) throw new CalibrationInputException("trace-adjacent-angle", "混合描线相邻转角过大，请补点。");
                     a = points[^1].A + change;
                 }
                 points.Add((r, a));

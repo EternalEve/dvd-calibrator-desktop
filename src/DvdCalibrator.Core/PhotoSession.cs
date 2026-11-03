@@ -41,7 +41,7 @@ public sealed record PhotoSession(int SchemaVersion, string RecordType, string S
         Validate();
         var fit = CalibrationPhotoRectifier.Fit(OuterBoundary.Select(p => new CalibrationPoint(p.X, p.Y)).ToArray(),
             HoleBoundary.Select(p => new CalibrationPoint(p.X, p.Y)).ToArray(), 60, 7.5, token);
-        if (!fit.Succeeded || fit.Transform is null) throw new ArgumentException(fit.Message);
+        if (!fit.Succeeded || fit.Transform is null) throw new CalibrationInputException("photo-contour-mismatch", fit.Message);
         return this with { Rectification = new(BoundaryHash(), Algorithm, MatrixConvention,
             fit.Transform.DiscToSourceMatrix9.ToImmutableArray(), fit.OuterRmsPixels, fit.HoleRmsPixels),
             ConfirmedRectificationSha256 = null };

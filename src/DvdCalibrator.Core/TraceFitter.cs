@@ -10,10 +10,10 @@ public static class TraceFitter
     public static ImmutableArray<TraceDatum> Prepare(PhotoSession session, GeometryParameters generated)
     {
         session.Validate(); generated.Validate();
-        if (!session.IsConfirmed) throw new ArgumentException("请先核对并确认照片矫正。");
-        var primary = session.Traces.FirstOrDefault(t => t.Id == "line-1") ?? throw new ArgumentException("缺少主描线 line-1。");
+        if (!session.IsConfirmed) throw new CalibrationInputException("photo-rectification-unconfirmed", "请先核对并确认照片矫正。");
+        var primary = session.Traces.FirstOrDefault(t => t.Id == "line-1") ?? throw new CalibrationInputException("trace-missing", "缺少主描线 line-1。");
         if (primary.Points.Length < 24 || primary.Points.Length > 600)
-            throw new ArgumentException("主线需要 24–600 点，建议 40 点以上并覆盖内中外；末段 25% 将留出检查。");
+            throw new CalibrationInputException("trace-point-count", "主线需要 24–600 点，建议 40 点以上并覆盖内中外；末段 25% 将留出检查。");
         if (session.Traces.Any(t => t.Id is not ("line-1" or "validation-180")))
             throw new ArgumentException("仅接受主线和明确为对侧 180° 的留出线。");
         var transform = session.GetTransform();
@@ -21,28 +21,28 @@ public static class TraceFitter
         foreach (var trace in session.Traces)
         {
             if (trace.Points.Length > 600 || (trace.Id == "validation-180" && trace.Points.Length < 6))
-                throw new ArgumentException("独立留出线需要 6–600 个点。");
+                throw new CalibrationInputException("trace-point-count", "独立留出线需要 6–600 个点。");
             var radii = new double[trace.Points.Length]; var angles = new double[trace.Points.Length];
             for (int i = 0; i < radii.Length; i++)
             {
                 var source = trace.Points[i];
                 if (PhotoRaster.IsMasked(source.X, source.Y, session.Masks))
-                    throw new ArgumentException($"{trace.Id} 的第 {i + 1} 点位于遮罩内，请修正点位或遮罩，不能静默删除后继续展开角度。");
+                    throw new CalibrationInputException("trace-point-masked", $"{trace.Id} 的第 {i + 1} 点位于遮罩内，请修正点位或遮罩，不能静默删除后继续展开角度。");
                 var disc = transform.SourceToDisc(source);
                 radii[i] = Math.Sqrt(disc.X * disc.X + disc.Y * disc.Y);
                 double angle = Math.Atan2(disc.Y, disc.X);
                 if (radii[i] is < 7.5 or > 60 || (i > 0 && radii[i] - radii[i - 1] < .01))
-                    throw new ArgumentException("描点必须按真实曲线从内向外排列，半径严格增加，不自动排序或截断点。");
+                    throw new CalibrationInputException("trace-radius-order", "描点必须按真实曲线从内向外排列，半径严格增加，不自动排序或截断点。");
                 if (i == 0) angles[i] = angle;
                 else
                 {
                     double change = Math.Atan2(Math.Sin(angle - angles[i - 1]), Math.Cos(angle - angles[i - 1]));
-                    if (Math.Abs(change) >= Math.PI / 2) throw new ArgumentException("相邻描点转角过大，请沿同一条曲线补点以降低漏圈风险。");
+                    if (Math.Abs(change) >= Math.PI / 2) throw new CalibrationInputException("trace-adjacent-angle", "相邻描点转角过大，请沿同一条曲线补点以降低漏圈风险。");
                     angles[i] = angles[i - 1] + change;
                 }
             }
             if ((radii[^1] - radii[0]) / (generated.OuterRadiusMm - generated.InnerRadiusMm) < .6)
-                throw new ArgumentException("描线径向覆盖不足 60%，请补充靠内和靠外的点。");
+                throw new CalibrationInputException("trace-coverage", "描线径向覆盖不足 60%，请补充靠内和靠外的点。");
             int trainingCount = trace.Id == "line-1" ? (int)Math.Floor(radii.Length * .75) : 0;
             for (int i = 0; i < radii.Length; i++)
             {
@@ -62,7 +62,7 @@ public static class TraceFitter
         TraceFitSettings? settings = null, CancellationToken token = default)
     {
         settings ??= TraceFitSettings.Default; settings.Validate(); token.ThrowIfCancellationRequested();
-        if (snapshotHash != session.SnapshotSha256) throw new ArgumentException("会话不属于当前生成快照。");
+        if (snapshotHash != session.SnapshotSha256) throw new CalibrationInputException("generation-record-mismatch", "会话不属于当前生成快照。");
         var data = Prepare(session, generated); var training = data.Where(p => !p.IsHoldout).ToArray();
         if (settings.ShapeOrder > 0 && session.Traces.First(t => t.Id == "line-1").Points.Length < 40)
             throw new ArgumentException("轨距形状拟合至少需要 40 个主线点。");
@@ -76,7 +76,7 @@ public static class TraceFitter
             if (candidates.Count == 0)
             {
                 if (range < .5) { range = range < .1 ? .1 : .5; continue; }
-                throw new ArgumentException("搜索范围内没有覆盖全部观测的有效模型；请检查照片尺度、生成记录和点位。");
+                throw new CalibrationInputException("model-domain-mismatch", "搜索范围内没有覆盖全部观测的有效模型；请检查照片尺度、生成记录和点位。");
             }
             if (!candidates[0].BoundaryLimited || range >= .5) break;
             range = range < .1 ? .1 : .5;

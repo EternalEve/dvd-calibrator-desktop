@@ -60,7 +60,7 @@ public static class DenseExport
                 .Append(WebUtility.HtmlEncode(System.Text.Json.JsonSerializer.Serialize(c.Parameters, RecordJson.Options)))
                 .Append("</code></td><td>").Append(N(c.TrainingPhaseRmsRadians)).Append(" / ").Append(N(c.HoldoutPhaseRmsRadians))
                 .Append("</td><td>").Append(N(c.TrainingImageError)).Append(" / ").Append(N(c.HoldoutImageError)).Append("</td><td>")
-                .Append(c.Supported ? "支持，待核对" : WebUtility.HtmlEncode(string.Join(", ", c.RejectionReasons))).Append("</td></tr>");
+                .Append(c.Supported ? "支持，待核对" : WebUtility.HtmlEncode(CalibrationGuidance.Describe(CalibrationGuidance.Issues(c.RejectionReasons)))).Append("</td></tr>");
         }
         html.Append("</table><h2>下一张预测</h2>");
         if (a.NextDisc is { } next) html.Append("<p>状态 ").Append(next.Status).Append("；候选间最大形状差 ").Append(N(next.MaximumCandidateDifferenceMm))
