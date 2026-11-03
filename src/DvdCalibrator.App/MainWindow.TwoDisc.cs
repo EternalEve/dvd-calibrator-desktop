@@ -19,7 +19,8 @@ public sealed partial class MainWindow
     private string? forecastPlanHash;
     private FrameworkElement BuildTwoDiscToolbar()
     {
-        var panel = new StackPanel { Margin = new(12, 0, 12, 5), Background = new SolidColorBrush(Color.FromRgb(233, 240, 248)) };
+        var panel = new StackPanel { Margin = new(12, 0, 12, 5) };
+        panel.SetResourceReference(Panel.BackgroundProperty, "WorkflowBackgroundBrush");
         var actions = new WrapPanel();
         actions.Children.Add(new TextBlock { Text = "两盘任务 · 预计精调像素/mm", Margin = new(8), VerticalAlignment = VerticalAlignment.Center }); actions.Children.Add(finePixels);
         prepareFine = Button("创建第二张计划", PrepareFine); actions.Children.Add(prepareFine);
@@ -143,9 +144,9 @@ public sealed partial class MainWindow
             var drawing = new DrawingGroup();
             using (var dc = drawing.Open())
             {
-                dc.DrawRectangle(Brushes.WhiteSmoke, null, new Rect(-64, -64, 128, 128));
-                dc.DrawEllipse(Brushes.White, new Pen(Brushes.SlateGray, .2), new Point(0, 0), 60, 60);
-                dc.DrawEllipse(Brushes.LightSlateGray, null, new Point(0, 0), 7.5, 7.5);
+                dc.DrawRectangle((Brush)FindResource("ViewportBackgroundBrush"), null, new Rect(-64, -64, 128, 128));
+                dc.DrawEllipse((Brush)FindResource("ForecastDiscBrush"), new Pen((Brush)FindResource("ForecastOutlineBrush"), .3), new Point(0, 0), 60, 60);
+                dc.DrawEllipse((Brush)FindResource("ViewportBackgroundBrush"), null, new Point(0, 0), 7.5, 7.5);
                 foreach (var c in plan.Forecast.Curves)
                 {
                     if (c.Curve.Zip(c.Curve.Skip(1)).Any(p => Math.Abs(p.First.AngleRadians - p.Second.AngleRadians) > Math.PI / 8)) continue;
@@ -157,7 +158,7 @@ public sealed partial class MainWindow
                             var first = c.Curve[0]; context.BeginFigure(new Point(first.RadiusMm * Math.Cos(first.AngleRadians + offset), -first.RadiusMm * Math.Sin(first.AngleRadians + offset)), false, false);
                             foreach (var p in c.Curve.Skip(1)) context.LineTo(new Point(p.RadiusMm * Math.Cos(p.AngleRadians + offset), -p.RadiusMm * Math.Sin(p.AngleRadians + offset)), true, false);
                         }
-                        path.Freeze(); dc.DrawGeometry(null, new Pen(Brushes.DarkOrange, .22), path);
+                        path.Freeze(); dc.DrawGeometry(null, new Pen((Brush)FindResource("ForecastCurveBrush"), .45), path);
                     }
                 }
             }

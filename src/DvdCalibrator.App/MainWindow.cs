@@ -45,11 +45,13 @@ public sealed partial class MainWindow : Window
     public MainWindow()
     {
         Title = "DVD Calibrator · 两盘任务与照片标注"; Width = 1380; Height = 1000; MinWidth = 1050; MinHeight = 800;
-        Background = new SolidColorBrush(Color.FromRgb(246, 248, 251)); FontFamily = new("Microsoft YaHei UI"); FontSize = 13;
+        SetResourceReference(BackgroundProperty, "AppBackgroundBrush"); SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
+        FontFamily = new("Microsoft YaHei UI"); FontSize = 13;
         var root = new DockPanel { Background = Background }; Content = root;
         var heading = new StackPanel { Margin = new(16, 12, 16, 4) };
         heading.Children.Add(new TextBlock { Text = "DVD CALIBRATOR", FontSize = 23, FontWeight = FontWeights.SemiBold });
-        heading.Children.Add(new TextBlock { Text = "06  两盘标定与操作诊断    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) });
+        var subtitle = new TextBlock { Text = "两盘标定与照片工作区    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) };
+        subtitle.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush"); heading.Children.Add(subtitle);
         DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading);
         var toolbar = new WrapPanel { Margin = new(12, 0, 12, 4) };
         toolbar.Children.Add(Button("打开生成快照", OpenSnapshot)); toolbar.Children.Add(Button("导入照片", ImportPhoto));
@@ -59,20 +61,23 @@ public sealed partial class MainWindow : Window
         toolbar.Children.Add(Button("载入密环演示", LoadDenseDemo));
         DockPanel.SetDock(toolbar, Dock.Top); root.Children.Add(toolbar);
         var workflowBar = BuildTwoDiscToolbar(); DockPanel.SetDock(workflowBar, Dock.Top); root.Children.Add(workflowBar);
-        var footer = new Border { Background = new SolidColorBrush(Color.FromRgb(229, 237, 247)), Child = status, MinHeight = 46 };
+        var footer = new Border { Child = status, MinHeight = 46, BorderThickness = new(0, 1, 0, 0) };
+        footer.SetResourceReference(Border.BackgroundProperty, "StatusBackgroundBrush");
+        footer.SetResourceReference(Border.BorderBrushProperty, "SurfaceBorderBrush");
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
         var workspace = new Grid { Margin = new(12, 2, 12, 12) };
         workspace.ColumnDefinitions.Add(new() { Width = new(3, GridUnitType.Star) }); workspace.ColumnDefinitions.Add(new() { Width = new(10) });
         workspace.ColumnDefinitions.Add(new() { Width = new(2, GridUnitType.Star) }); root.Children.Add(workspace);
-        var left = new DockPanel { Background = Brushes.White }; workspace.Children.Add(left);
+        var left = new DockPanel(); left.SetResourceReference(Panel.BackgroundProperty, "PanelBackgroundBrush"); workspace.Children.Add(left);
         var editing = new WrapPanel { Margin = new(6) }; editing.Children.Add(mode);
         editing.Children.Add(Button("删除选中点", DeleteSelected)); editing.Children.Add(Button("撤销最后一点", UndoPoint));
         editing.Children.Add(Button("清空当前标注", ClearCurrent)); editing.Children.Add(Button("结束遮罩", FinishMask));
         editing.Children.Add(Button("适合窗口", FitView)); editing.Children.Add(zoomSlider);
         DockPanel.SetDock(editing, Dock.Top); left.Children.Add(editing);
         DockPanel.SetDock(counts, Dock.Bottom); left.Children.Add(counts);
+        scroll.SetResourceReference(Control.BackgroundProperty, "ViewportBackgroundBrush");
         scroll.Content = canvas; left.Children.Add(scroll); canvas.Children.Add(photoImage);
-        var right = new DockPanel { Background = Brushes.White }; Grid.SetColumn(right, 2); workspace.Children.Add(right);
+        var right = new DockPanel(); right.SetResourceReference(Panel.BackgroundProperty, "PanelBackgroundBrush"); Grid.SetColumn(right, 2); workspace.Children.Add(right);
         var actions = new WrapPanel { Margin = new(8) };
         fitButton = Button("计算联合矫正", async () => await Compute()); actions.Children.Add(fitButton);
         confirmButton = Button("确认矫正", Confirm); actions.Children.Add(confirmButton);

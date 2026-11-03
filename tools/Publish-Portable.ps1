@@ -43,7 +43,7 @@ try {
             }
         }
     }
-    foreach ($required in @('DvdCalibrator.App.exe', 'DvdCalibrator.Cli.exe', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll', 'wpfgfx_cor3.dll')) {
+    foreach ($required in @('DvdCalibrator.App.exe', 'DvdCalibrator.Cli.exe', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll', 'PresentationFramework.Fluent.dll', 'wpfgfx_cor3.dll')) {
         if (-not (Test-Path -LiteralPath (Join-Path $payload $required))) { throw "Missing payload file: $required" }
     }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $payload 'LICENSE')
