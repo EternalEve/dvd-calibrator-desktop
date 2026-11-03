@@ -41,6 +41,9 @@ public sealed record ExternalGenerationSnapshot(int SchemaVersion, string Record
     }
 
     public void Validate(string folder)
+        => ValidateAttachments(name => File.ReadAllBytes(Path.Combine(folder, name)));
+
+    public void ValidateAttachments(Func<string, byte[]> read)
     {
         if (SchemaVersion != 1 || RecordType != "external-generation-snapshot" || State != "frozen"
             || !Guid.TryParseExact(Id, "N", out _) || !RecordJson.IsHash(ContentSha256)
@@ -51,9 +54,9 @@ public sealed record ExternalGenerationSnapshot(int SchemaVersion, string Record
         if (SourceRecordFile != "source.json" || SourceImageFile is not ("assets/source-image.png"
             or "assets/source-image.bmp" or "assets/source-image.jpg" or "assets/source-image.jpeg" or "assets/source-image.gif")
             || !RecordJson.IsHash(SourceImageSha256)) throw new ArgumentException("源附件路径或哈希无效。");
-        var parsed = DiscImageRecord.Read(Path.Combine(folder, SourceRecordFile));
+        var parsed = DiscImageRecord.ReadBytes(read(SourceRecordFile));
         if (RecordJson.Hash(parsed) != RecordJson.Hash(GenerationRecord)
-            || RecordJson.FileHash(Path.Combine(folder, SourceImageFile)) != SourceImageSha256)
+            || Convert.ToHexStringLower(System.Security.Cryptography.SHA256.HashData(read(SourceImageFile))) != SourceImageSha256)
             throw new ArgumentException("快照附件已改变，或派生生成模型与真实记录不一致。");
     }
 }

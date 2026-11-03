@@ -24,6 +24,12 @@ public static class DiscImageRecord
     {
         if (new FileInfo(path).Length > RecordJson.MaxBytes) throw new ArgumentException("记录超过 4 MB 限制。");
         byte[] sourceBytes = File.ReadAllBytes(path);
+        return ReadBytes(sourceBytes);
+    }
+
+    public static ImportedGenerationRecord ReadBytes(byte[] sourceBytes)
+    {
+        if (sourceBytes.Length > RecordJson.MaxBytes) throw new ArgumentException("记录超过 4 MB 限制。");
         using var document = RecordJson.ParseDocument(Encoding.UTF8.GetString(sourceBytes).TrimStart('\uFEFF'));
         var root = document.RootElement;
         if (root.GetProperty("format").GetString() != "dvd-nrzi-disc-fill-v2"

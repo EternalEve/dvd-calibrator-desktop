@@ -27,3 +27,7 @@ solve --image upstream-input.bmp --iso-output .local/upstream-fixture.iso
 
 历史 JSON 保留当时绝对路径和耗时，因此重建后的字节哈希可以变化。运行时不依赖这些路径，
 冻结/导入从明确提供的源文件复制附件。ISO 不进入版本控制，也不用于操作刻录设备。
+
+`photo-session-v2.synthetic.json` 来自 `SyntheticPhoto.Create()` 的已知投影圆周，用于 CLI 几何回归。
+这是无照片附件的独立 JSON，不是实拍任务包。Windows 图像检查在各自 artifacts 目录产出
+同类 `draft-session.json`、完整 `.dvdphoto` 和预览，可用于重建该软件样例。

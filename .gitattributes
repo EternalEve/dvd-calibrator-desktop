@@ -1,4 +1,5 @@
 * text=auto
 third_party/DiscImageStudio/DvdTrackGeometry.cs -text
+third_party/DiscImageStudio/CalibrationPhotoRectifier.cs -text
 *.png -text
 *.pgm -text

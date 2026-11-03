@@ -1,13 +1,17 @@
 # DVD Calibrator Desktop
 
-12 cm 单层 DVD 标定工具。当前版本 **0.1.0，阶段 A：数据与正向模型基础**。
-本阶段提供本地命令行，还没有桌面界面、照片矫正或粗调/精调反推。
+12 cm 单层 DVD 标定工具。当前版本 **0.2.0，阶段 B：照片标注与联合矫正**。
+已有 Windows WPF 桌面界面、照片任务包与正向模型命令行；粗调/精调反推尚未实现。
 
 目标是在人工确认下，以一张粗调盘、一张精调盘为正常路径，获得供
 DiscImageStudio 使用的等效补偿参数。两张盘完成率需要后续实盘验证。
 
 ## 当前能力
 
+- 导入原图并应用全部 8 种 EXIF 定向，保留原始字节和原分辨率定向 PNG。
+- 桌面外缘/孔缘布点与拖点、缩放平移、反光多边形遮罩和单条径向线描点。
+- 联合双圆透视恢复，直接采样原图生成正视/极坐标预览，显示轮廓 RMS 并人工确认。
+- 自带照片和生成附件的 `.dvdphoto` 任务包，支持换目录恢复与哈希检查。
 - 固定 DiscImageStudio 提交 `374c0630326ea61be9adca8d7de3c96f083c00df`，直接复用其完整 DVD 几何源文件。
 - 计算三次轨距、总轨长、半径与数据进度互换、累计角度和完整正向相位映射。
 - 显式处理 CW/CCW、mm/nm/rad、观察面和零起始 LBA；拒绝越界、非正轨距及不完整参数。
@@ -18,13 +22,13 @@ DiscImageStudio 使用的等效补偿参数。两张盘完成率需要后续实�
 
 ## 构建和检查
 
-需要 .NET SDK **10.0.203**（同一补丁系列可滚动）。Windows 可直接运行：
+完整 solution 需要 Windows 与 .NET SDK **10.0.203**（同一补丁系列可滚动），包含 WPF 参考包和桌面运行时：
 
 ```powershell
 ./tools/Test.ps1
 ```
 
-检查包含编译、独立数值对照、数据与失败路径检查，以及命令行端到端检查。
+检查包含编译、独立数值对照、照片与任务包检查、离屏 WPF 布局和命令行端到端检查。
 项目没有外部 NuGet 包；`NuGet.Config` 清空源，正常构建和运行无需联网。
 SDK 自带的运行时和参考包须已安装。`.local/`、`bin/`、`obj/`、`artifacts/` 不进入版本控制。
 
@@ -36,6 +40,16 @@ dotnet run --project tests/DvdCalibrator.Tests -c Release --no-build
 ```
 
 ## 运行合成示例
+
+启动桌面界面（去掉 `-- --demo` 即为空白任务入口）：
+
+```powershell
+dotnet run --project src/DvdCalibrator.App -c Release -- --demo
+```
+
+真实任务先打开第一阶段冻结的 `generation.json`，再导入对应盘片的记录面照片。
+沿实体外缘与真实孔缘各标 8–16 点，计算、核对并确认矫正。任务包使用新文件名保存修订。
+操作细节见 [照片工作流](docs/photo-workflow.md)。演示是数学生成图，不是实盘验证。
 
 所有输出目录必须尚不存在。重复运行时请使用新目录名。
 
@@ -64,18 +78,19 @@ SVG 显示半盘边界或十字中心线；PGM（P5）是标准灰度图，`sour
 | --- | --- |
 | `src/DvdCalibrator.Core` | 几何适配、数据契约、哈希、正向预测、记录解析 |
 | `src/DvdCalibrator.Cli` | 命令行入口 |
+| `src/DvdCalibrator.Imaging.Windows` | WPF 编解码、EXIF、照片任务包 |
+| `src/DvdCalibrator.App` | 桌面照片标注与矫正工作区 |
 | `third_party/DiscImageStudio` | 固定版本几何与许可证 |
 | `schemas` | JSON Schema 结构定义，语义验证由 Core 执行 |
 | `tests/DvdCalibrator.Tests` | 无外部框架的检查程序和独立 Simpson 数值参照 |
 | `fixtures` | 真实上游输出的最小软件测试样例 |
 | `docs` | 架构决策、坐标约定、数据与阶段验收 |
 
-下一阶段实现原图保存、EXIF 定向、实体外缘和孔缘标注、联合矫正与遮罩。
-随后完成人工描线闭环，最后加入密集环、多候选诊断与两张盘工作流。
-Windows 桌面采用 WPF；核心与 CLI 保持独立，核心项目目标为 `net10.0`。
+下一阶段完成人工描线粗调/精调、候选叠加与配置导出闭环，再加入密集环与两张盘工作流。
+Core/CLI 继续目标为 `net10.0`；图像与桌面项目为 `net10.0-windows`。
 
 详见 [架构与坐标](docs/architecture.md)、[数据契约](docs/data-contracts.md)、
-[阶段 A 验收](docs/phase-a-validation.md) 与 [CHANGELOG](CHANGELOG.md)。
+[阶段 A 验收](docs/phase-a-validation.md)、[阶段 B 验收](docs/phase-b-validation.md) 与 [CHANGELOG](CHANGELOG.md)。
 原始制作指南保留为完整设计参考；其中列出的最终 CLI 和 schema 草稿不等于当前实现。
 
 采用 GPL-3.0-or-later，见 [LICENSE](LICENSE)、[第三方声明](THIRD-PARTY-NOTICES.md)。

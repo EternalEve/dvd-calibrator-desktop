@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework><OutputType>WinExe</OutputType><UseWPF>true</UseWPF></PropertyGroup>
+  <ItemGroup><ProjectReference Include="../DvdCalibrator.Imaging.Windows/DvdCalibrator.Imaging.Windows.csproj" /></ItemGroup>
+</Project>

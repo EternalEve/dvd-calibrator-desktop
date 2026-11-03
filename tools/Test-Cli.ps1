@@ -39,4 +39,9 @@ $tampered = Get-Content -LiteralPath $snapshot -Raw | ConvertFrom-Json
 $tampered.generated.innerRadiusMm = 24.1
 $tampered | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $runRoot 'tampered.json') -Encoding utf8
 $null = Invoke-Cli 2 @('inspect', '--record', (Join-Path $runRoot 'tampered.json'))
+$rectifyFolder = Join-Path $runRoot 'rectify'
+$null = Invoke-Cli 0 @('rectify', '--session', (Join-Path $projectRoot 'fixtures/photo-session-v2.synthetic.json'), '--out', $rectifyFolder)
+$rectification = Get-Content -LiteralPath (Join-Path $rectifyFolder 'photo-session.json') -Raw | ConvertFrom-Json
+if ($null -eq $rectification.rectification -or $null -ne $rectification.confirmedRectificationSha256) { throw 'CLI rectification confirmation semantics failed.' }
+$null = Invoke-Cli 3 @('rectify', '--session', (Join-Path $projectRoot 'fixtures/photo-session-v2.synthetic.json'), '--out', $rectifyFolder)
 Write-Output "PASS CLI demo / prediction / import / overwrite / invalid-input checks ($runRoot)"

@@ -1,5 +1,8 @@
 <Solution>
   <Project Path="src/DvdCalibrator.Core/DvdCalibrator.Core.csproj" />
   <Project Path="src/DvdCalibrator.Cli/DvdCalibrator.Cli.csproj" />
+  <Project Path="src/DvdCalibrator.Imaging.Windows/DvdCalibrator.Imaging.Windows.csproj" />
+  <Project Path="src/DvdCalibrator.App/DvdCalibrator.App.csproj" />
   <Project Path="tests/DvdCalibrator.Tests/DvdCalibrator.Tests.csproj" />
+  <Project Path="tests/DvdCalibrator.Imaging.Tests/DvdCalibrator.Imaging.Tests.csproj" />
 </Solution>

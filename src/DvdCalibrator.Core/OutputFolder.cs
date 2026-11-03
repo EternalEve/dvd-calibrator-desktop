@@ -15,7 +15,18 @@ public static class OutputFolder
             cancellationToken.ThrowIfCancellationRequested();
             write(staging);
             cancellationToken.ThrowIfCancellationRequested();
-            Directory.Move(staging, target); // Fails if a concurrent task has claimed this destination.
+            for (int attempt = 0; ; attempt++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try { Directory.Move(staging, target); break; }
+                catch (Exception e) when (e is IOException or UnauthorizedAccessException
+                    && attempt < 3 && !Directory.Exists(target) && !File.Exists(target))
+                {
+                    // Windows indexing/scanning can briefly hold a freshly closed file.
+                    // Never retry over a destination claimed by a concurrent task.
+                    if (cancellationToken.WaitHandle.WaitOne(50 * (attempt + 1))) cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
         }
         finally
         {

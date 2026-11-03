@@ -9,6 +9,11 @@
     "local": "third_party/DiscImageStudio/DvdTrackGeometry.cs",
     "sha256": "54f03eb005be1d0d1c9b15cea2a3eab7f57c7b2bde9bf1f7ee0b96c453d916af",
     "modified": false
+  }, {
+    "source": "src/DiscImageStudio.Core/Calibration/CalibrationPhotoRectifier.cs",
+    "local": "third_party/DiscImageStudio/CalibrationPhotoRectifier.cs",
+    "sha256": "85128a0141dc97762632361e4ebf1f678cfd9fefd421bd2959c6d36808b37966",
+    "modified": false
   }],
   "recordAdapter": "dvd-nrzi-disc-fill-v2/dispersion/full-disc",
   "note": "Parser compatibility baseline only. Upstream sidecars do not establish the executable commit or source image hash."

@@ -9,7 +9,7 @@ try
     if (args.Length == 0 || args is ["--help"] or ["help"])
     {
         Console.WriteLine("""
-            DvdCalibrator 0.1.0 — phase A, offline geometry foundation
+            DvdCalibrator 0.2.0 — offline geometry and photo rectification
             demo --out NEW_FOLDER
             inspect --record SNAPSHOT_OR_DISCIMAGE_SIDECAR.json
             import-discimage --record SIDECAR.json --out NEW_FOLDER
@@ -18,6 +18,7 @@ try
                              --generator-commit COMMIT --out NEW_FOLDER
             predict --generated SNAPSHOT.json --actual MODEL.json --out NEW_FOLDER
                     [--samples 2049] [--rotation-deg 0]
+            rectify --session PHOTO_SESSION_V2.json --out NEW_FOLDER
 
             Outputs are synthetic predictions, not fitted or physically validated profiles.
             Existing output directories are rejected. Exit codes: 0 OK, 2 invalid input,
@@ -34,6 +35,7 @@ try
         "import-discimage" => ["record", "out"],
         "freeze-discimage" => ["record", "image", "media", "confirmed-sectors", "generator-version", "generator-commit", "out"],
         "predict" => ["generated", "actual", "out", "samples", "rotation-deg"],
+        "rectify" => ["session", "out"],
         _ => throw new ArgumentException($"未知命令：{command}，使用 --help 查看帮助。")
     };
     var options = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -48,6 +50,14 @@ try
 
     switch (command)
     {
+        case "rectify":
+        {
+            var session = RecordJson.Read<PhotoSession>(Require("session"));
+            var result = session.Rectify(cancellation.Token);
+            OutputFolder.Publish(Require("out"), folder => RecordJson.WriteNew(Path.Combine(folder, "photo-session.json"), result), cancellation.Token);
+            Console.WriteLine("Dual-circle rectification saved; manual confirmation pending.");
+            break;
+        }
         case "inspect":
         {
             string path = Require("record");

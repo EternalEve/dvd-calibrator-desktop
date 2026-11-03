@@ -8,13 +8,14 @@ string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../
 var schemaTypes = new (string Name, Type Type)[] { ("geometry", typeof(GeometryParameters)),
     ("generation-snapshot", typeof(GenerationSnapshot)), ("observations", typeof(Observations)),
     ("external-generation-snapshot", typeof(ExternalGenerationSnapshot)),
+    ("photo-session-v2", typeof(PhotoSession)),
     ("fit-result", typeof(FitResult)), ("forward-prediction", typeof(PredictionResult)) };
 static JsonNode ExportSchema(string name, Type type)
 {
     var node = RecordJson.Options.GetJsonSchemaAsNode(type);
     node["type"] = "object";
     node["$schema"] = "https://json-schema.org/draft/2020-12/schema";
-    node["$id"] = $"urn:dvd-calibrator:{name}:v1";
+    node["$id"] = name == "photo-session-v2" ? "urn:dvd-calibrator:photo-session:v2" : $"urn:dvd-calibrator:{name}:v1";
     return node;
 }
 if (args is ["--write-schemas"])
@@ -53,8 +54,8 @@ static void Reject(Action action)
 Test("vendored source byte hash matches fixed upstream lock", () =>
 {
     using var data = JsonDocument.Parse(File.ReadAllText(Path.Combine(root, "upstream.lock.json")));
-    var file = data.RootElement.GetProperty("files")[0];
-    Check(RecordJson.FileHash(Path.Combine(root, file.GetProperty("local").GetString()!)) == file.GetProperty("sha256").GetString(), "vendor hash mismatch");
+    foreach (var file in data.RootElement.GetProperty("files").EnumerateArray())
+        Check(RecordJson.FileHash(Path.Combine(root, file.GetProperty("local").GetString()!)) == file.GetProperty("sha256").GetString(), "vendor hash mismatch");
 });
 Test("published schemas match the actual serializer contracts", () =>
 {
@@ -292,6 +293,7 @@ Test("external snapshot freezes copied source bytes and survives relocation", ()
     Reject(() => loaded.Validate(moved));
 });
 
+PhotoChecks.Register(Test);
 Console.WriteLine($"Independent oracle max angle error: {worstAngle:G6} rad; max inverse radius error: {worstRadius:G6} mm.");
 Console.WriteLine($"{count - failures}/{count} checks passed.");
 return failures == 0 ? 0 : 1;

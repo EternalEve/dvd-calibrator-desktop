@@ -1,0 +1,195 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer"
+    },
+    "recordType": {
+      "type": "string"
+    },
+    "snapshotId": {
+      "type": "string"
+    },
+    "snapshotSha256": {
+      "type": "string"
+    },
+    "observationSide": {
+      "type": "string"
+    },
+    "photo": {
+      "type": "object",
+      "properties": {
+        "originalSha256": {
+          "type": "string"
+        },
+        "orientedFileSha256": {
+          "type": "string"
+        },
+        "orientedPixelsSha256": {
+          "type": "string"
+        },
+        "originalWidth": {
+          "type": "integer"
+        },
+        "originalHeight": {
+          "type": "integer"
+        },
+        "orientedWidth": {
+          "type": "integer"
+        },
+        "orientedHeight": {
+          "type": "integer"
+        },
+        "appliedExifOrientation": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "originalSha256",
+        "orientedFileSha256",
+        "orientedPixelsSha256",
+        "originalWidth",
+        "originalHeight",
+        "orientedWidth",
+        "orientedHeight",
+        "appliedExifOrientation"
+      ],
+      "additionalProperties": false
+    },
+    "outerBoundary": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "holeBoundary": {
+      "type": "array",
+      "items": {
+        "$ref": "#/properties/outerBoundary/items"
+      }
+    },
+    "masks": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "vertices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/properties/outerBoundary/items"
+            }
+          }
+        },
+        "required": [
+          "vertices"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "traces": {
+      "type": "array",
+      "items": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/properties/outerBoundary/items"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "points"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "rectification": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "inputSha256": {
+          "type": "string"
+        },
+        "algorithmVersion": {
+          "type": "string"
+        },
+        "matrixConvention": {
+          "type": "string"
+        },
+        "discToSourceMatrix9": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "outerRmsPixels": {
+          "type": "number"
+        },
+        "holeRmsPixels": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "inputSha256",
+        "algorithmVersion",
+        "matrixConvention",
+        "discToSourceMatrix9",
+        "outerRmsPixels",
+        "holeRmsPixels"
+      ],
+      "additionalProperties": false
+    },
+    "confirmedRectificationSha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "snapshotId",
+    "snapshotSha256",
+    "observationSide",
+    "photo",
+    "outerBoundary",
+    "holeBoundary",
+    "masks",
+    "traces",
+    "rectification",
+    "confirmedRectificationSha256"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:photo-session:v2"
+}
