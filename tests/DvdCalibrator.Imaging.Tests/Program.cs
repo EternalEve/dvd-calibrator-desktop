@@ -153,6 +153,49 @@ internal static class Program
             using var stream = File.Create(Path.Combine(output, "desktop-layout.png")); encoder.Save(stream);
             Check(content.ActualWidth == 1380 && content.ActualHeight == 840, "layout dimensions");
         });
+        PhotoTask? denseDemo = null;
+        Test("dense mixed task restores original analysis exports diagnostics and invalidates edited input", () =>
+        {
+            denseDemo = SyntheticPhoto.CreateDenseDemo();
+            var result = denseDemo.AnalyzeDense();
+            Check(result.Candidates.Any(c => c.Supported), "dense demo not supported: " + string.Join(";", result.Candidates.Select(c => string.Join(',', c.RejectionReasons))));
+            denseDemo.AttachDense(result);
+            string package = Path.Combine(output, "dense-fit.dvdphoto"); denseDemo.SaveNew(package);
+            var loaded = PhotoTask.Load(package);
+            Check(loaded.Dense is not null && RecordJson.Hash(loaded.Dense) == RecordJson.Hash(result), "dense result changed on restore");
+            DenseExport.Write(Path.Combine(output, "dense-report"), loaded.Dense!, loaded.AnalyticSnapshot(), loaded.Session, loaded.Photo.Image);
+            Check(File.Exists(Path.Combine(output, "dense-report/next-disc.svg")), "next-disc report missing");
+            Reject(() => DenseExport.Write(Path.Combine(output, "dense-report"), loaded.Dense!, loaded.AnalyticSnapshot(), loaded.Session, loaded.Photo.Image));
+            loaded.Session = loaded.Session.WithMasks([new([new(10, 10), new(40, 10), new(40, 40)])]);
+            Check(loaded.Dense is null, "dense result survived edited mask");
+            Reject(() => loaded.AttachDense(result));
+            File.WriteAllBytes(Path.Combine(output, "dense-photo.png"), denseDemo.Photo.OrientedPng);
+        });
+        Test("desktop renders dense diagnostics observed fragments and complete prediction", () =>
+        {
+            Check(denseDemo?.Dense is not null, "dense package prerequisite missing");
+            var window = new DvdCalibrator.App.MainWindow();
+            var content = (FrameworkElement)window.Content;
+            content.Measure(new Size(1380, 960)); content.Arrange(new Rect(0, 0, 1380, 960)); content.UpdateLayout();
+            window.LoadPhotoTask(denseDemo!); content.Measure(new Size(1380, 960)); content.Arrange(new Rect(0, 0, 1380, 960)); content.UpdateLayout();
+            IEnumerable<DependencyObject> Descendants(DependencyObject parent)
+            {
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+                {
+                    var child = VisualTreeHelper.GetChild(parent, i); yield return child;
+                    foreach (var nested in Descendants(child)) yield return nested;
+                }
+            }
+            var objects = Descendants(content).ToArray();
+            var diagnostic = objects.OfType<System.Windows.Controls.TextBlock>().Single(t => t.Name == "DenseDiagnostic");
+            Check(diagnostic.Text.Contains("下一张预测待核对", StringComparison.Ordinal), "next-disc status not displayed");
+            var canvas = objects.OfType<System.Windows.Controls.Canvas>().Single(c => c.Name == "SourcePixelCanvas");
+            Check(canvas.Children.OfType<System.Windows.Shapes.Polyline>().Any(p => p.Stroke == Brushes.MediumPurple), "dense full-model overlay missing");
+            Check(canvas.Children.OfType<System.Windows.Shapes.Polyline>().Count(p => p.Stroke == Brushes.DeepSkyBlue) >= 2, "observed gap was bridged");
+            var bitmap = new RenderTargetBitmap(1380, 960, 96, 96, PixelFormats.Pbgra32); bitmap.Render(content);
+            var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            using var stream = File.Create(Path.Combine(output, "dense-desktop.png")); encoder.Save(stream);
+        });
         Console.WriteLine($"{passed}/{total} Windows imaging checks passed. Artifacts: {output}");
         return passed == total ? 0 : 1;
     }

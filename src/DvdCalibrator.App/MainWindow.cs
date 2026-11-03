@@ -25,6 +25,8 @@ public sealed class MainWindow : Window
     private readonly ComboBox candidateBox = new() { MinWidth = 260, Margin = new(3), Name = "FitCandidateSelector" };
     private readonly TextBlock fitDetail = new() { Margin = new(8), TextWrapping = TextWrapping.Wrap };
     private readonly Button traceFitButton, traceConfirmButton, profileButton;
+    private readonly Button denseButton, denseExportButton;
+    private readonly TextBlock denseDetail = new() { Name = "DenseDiagnostic", Margin = new(8), TextWrapping = TextWrapping.Wrap };
     private bool updatingCandidates;
     private TraceFitResult? displayedResult;
     private readonly TextBlock status = new() { TextWrapping = TextWrapping.Wrap, Margin = new(14, 8, 14, 8) };
@@ -46,13 +48,14 @@ public sealed class MainWindow : Window
         var root = new DockPanel { Background = Background }; Content = root;
         var heading = new StackPanel { Margin = new(16, 12, 16, 4) };
         heading.Children.Add(new TextBlock { Text = "DVD CALIBRATOR", FontSize = 23, FontWeight = FontWeights.SemiBold });
-        heading.Children.Add(new TextBlock { Text = "03  连续描线拟合与补偿导出    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) });
+        heading.Children.Add(new TextBlock { Text = "04  密环、混合观测与下一张预测    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) });
         DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading);
         var toolbar = new WrapPanel { Margin = new(12, 0, 12, 4) };
         toolbar.Children.Add(Button("打开生成快照", OpenSnapshot)); toolbar.Children.Add(Button("导入照片", ImportPhoto));
         toolbar.Children.Add(Button("打开任务包", OpenTask)); saveButton = Button("保存为新任务包", SaveTask); toolbar.Children.Add(saveButton);
         toolbar.Children.Add(Button("载入合成演示", LoadDemo)); toolbar.Children.Add(Button("导出预览", ExportPreviews));
         toolbar.Children.Add(Button("载入拟合演示", LoadTraceDemo));
+        toolbar.Children.Add(Button("载入密环演示", LoadDenseDemo));
         DockPanel.SetDock(toolbar, Dock.Top); root.Children.Add(toolbar);
         var footer = new Border { Background = new SolidColorBrush(Color.FromRgb(229, 237, 247)), Child = status, MinHeight = 46 };
         DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
@@ -79,6 +82,10 @@ public sealed class MainWindow : Window
         traceConfirmButton = Button("确认候选曲线", ConfirmTraceFit); options.Children.Add(traceConfirmButton);
         profileButton = Button("导出补偿配置", ExportProfile); options.Children.Add(profileButton);
         fitting.Children.Add(options); fitting.Children.Add(candidateBox); fitting.Children.Add(fitDetail);
+        var denseActions = new WrapPanel();
+        denseButton = Button("分析密环 / 混合", async () => await ComputeDense()); denseActions.Children.Add(denseButton);
+        denseExportButton = Button("导出密环诊断", ExportDense); denseActions.Children.Add(denseExportButton);
+        fitting.Children.Add(denseActions); fitting.Children.Add(denseDetail);
         DockPanel.SetDock(fitting, Dock.Top); right.Children.Add(fitting);
         DockPanel.SetDock(detail, Dock.Bottom); right.Children.Add(detail);
         var tabs = new TabControl { Margin = new(8, 0, 8, 0) };
@@ -151,6 +158,12 @@ public sealed class MainWindow : Window
         if (calculation is not null || !MayReplace()) return;
         Load(SyntheticPhoto.CreateTraceDemo(), true);
         SetStatus("拟合演示：已知投影轮廓和两条径向线均由完整模型生成，点击“拟合描线”查看候选。不是实盘验证。");
+    }
+    public void LoadDenseDemo()
+    {
+        if (calculation is not null || !MayReplace()) return;
+        Load(SyntheticPhoto.CreateDenseDemo(), true);
+        SetStatus("密环演示含半盘变频、低对比缺失带与局部描线。点击“分析密环 / 混合”，检查片段、留出和下一张预测；这是软件合成样本。");
     }
     public void LoadPhotoTask(PhotoTask next) => Load(next, false);
     private void Load(PhotoTask next, bool changed)
@@ -262,6 +275,15 @@ public sealed class MainWindow : Window
         foreach (var mask in s.Masks) Line(mask.Vertices, Brushes.IndianRed, true, true);
         Line(s.OuterBoundary, Brushes.DodgerBlue, true); Line(s.HoleBoundary, Brushes.LimeGreen, true);
         foreach (var trace in s.Traces) Line(trace.Points, Brushes.Gold, false);
+        if (task.Dense is { } dense)
+        {
+            var transform = s.GetTransform(); var candidate = dense.Candidates.FirstOrDefault(c => c.Supported);
+            if (candidate is not null)
+                foreach (double offset in new[] { 0d, Math.PI })
+                    Line(candidate.Curve.Select(p => transform.DiscToSource(new(p.RadiusMm * Math.Cos(p.AngleRadians + offset), p.RadiusMm * Math.Sin(p.AngleRadians + offset)))), Brushes.MediumPurple, false);
+            foreach (var fragment in dense.Observations.Fragments)
+                Line(fragment.Points.Select(p => transform.DiscToSource(new(p.RadiusMm * Math.Cos(p.PhaseRadians), p.RadiusMm * Math.Sin(p.PhaseRadians)))), Brushes.DeepSkyBlue, false);
+        }
         if (task.Fit is { } review)
         {
             var transform = s.GetTransform();
@@ -363,6 +385,29 @@ public sealed class MainWindow : Window
         task.AttachFit(task.Fit.Confirm(task.Snapshot.Geometry, task.Snapshot.Hash, task.Session));
         dirty = true; Refresh(); SetStatus("当前候选曲线已确认，可以导出完整补偿配置与诊断报告；实刻验证状态仍为 pending。");
     }
+    public async Task ComputeDense()
+    {
+        if (task is null || calculation is not null) return;
+        var input = task; calculation = new(); Refresh(); SetStatus("正在从原图提取多角度变频片段并拟合；缺失区保留为空，奇数角度及径向末段用于留出检查，可取消……");
+        try
+        {
+            var result = await Task.Run(() => input.AnalyzeDense(token: calculation.Token));
+            input.AttachDense(result); dirty = true; Draw();
+            SetStatus("密环分析完成：" + result.QualityStatus + "。紫线为完整模型，蓝线为可观测片段；请导出诊断检查所有候选、圈数分支和下一张预测。");
+        }
+        catch (OperationCanceledException) { SetStatus("密环分析已取消，照片与已保存观测保留。"); }
+        catch (Exception e) when (Expected(e)) { SetStatus(e.Message); }
+        finally { calculation.Dispose(); calculation = null; Refresh(); }
+    }
+    private void ExportDense()
+    {
+        if (task?.Dense is null || calculation is not null) return;
+        var dialog = new OpenFolderDialog { Title = "选择父目录，将新建密环诊断目录" };
+        if (dialog.ShowDialog() != true) return;
+        string path = System.IO.Path.Combine(dialog.FolderName, "dense-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"));
+        DenseExport.Write(path, task.Dense, task.AnalyticSnapshot(), task.Session, task.Photo.Image);
+        SetStatus("已导出完整候选、局部频率 CSV、重建图、下一张预测和中文诊断报告：" + path);
+    }
     private void ExportProfile()
     {
         if (task?.Fit is null || calculation is not null) return;
@@ -408,7 +453,13 @@ public sealed class MainWindow : Window
         confirmButton.IsEnabled = task?.Session.Rectification is not null && rectified.Source is not null && !busy && !task.Session.IsConfirmed;
         mode.IsEnabled = !busy;
         RefreshFit();
-        if (task is null) { counts.Text = "未导入照片"; detail.Text = "1  打开冻结生成快照并导入照片\n2  标外缘/孔缘并确认矫正\n3  沿同一条源径向线描点\n4  拟合并核对完整候选曲线\n5  确认后导出补偿配置\n\n密集环入口尚未实现。"; return; }
+        denseButton.IsEnabled = task?.Session.IsConfirmed == true && !busy;
+        denseExportButton.IsEnabled = task?.Dense is not null && !busy;
+        var dense = task?.Dense; var best = dense?.Candidates.FirstOrDefault(c => c.Supported);
+        denseDetail.Text = dense is null ? "密环入口：已知解析半盘靶，可联合局部主边界描线。" :
+            $"{DenseState(dense.QualityStatus)} · 片段 {dense.Observations.Fragments.Length} · 有效径向 {dense.Observations.UsableRadialFraction:P0}\n"
+            + (best is null ? "信息不足或模型失配，请查看诊断报告。" : $"ri {best.Parameters.InnerRadiusMm:F6} / ro {best.Parameters.OuterRadiusMm:F6} mm\n图像训练/留出 {best.TrainingImageError:F3} / {best.HoldoutImageError:F3} · 相位留出 {best.HoldoutPhaseRmsRadians:F3} rad\n{DenseState(dense.NextDisc?.Status ?? "photo-insufficient")}；实刻待验证。");
+        if (task is null) { counts.Text = "未导入照片"; detail.Text = "1  打开冻结生成快照并导入照片\n2  标外缘/孔缘并确认矫正\n3  连续边界可描线拟合\n4  已知半盘可分析密环或混合观测\n5  核对报告、候选与完整预测"; return; }
         var s = task.Session;
         counts.Text = $"外缘 {s.OuterBoundary.Length} 点  ·  孔缘 {s.HoleBoundary.Length} 点  ·  遮罩 {s.Masks.Length} 处  ·  描线 {s.Traces.Sum(t => t.Points.Length)} 点";
         detail.Text = $"原图 {s.Photo.OriginalWidth} × {s.Photo.OriginalHeight}  →  定向后 {s.Photo.OrientedWidth} × {s.Photo.OrientedHeight}\nEXIF 方向 {s.Photo.AppliedExifOrientation}  ·  缩放 {zoomSlider.Value:P0}\n观察面约定：记录面\n快照 {s.SnapshotId}\n"
@@ -416,6 +467,11 @@ public sealed class MainWindow : Window
             + "\n\n遮罩在原图上绘制多边形后点击“结束遮罩”。\n极坐标左→右：0°→360°（逆时针）；上→下：生成内半径→外半径。\n照片矫正不会消除镜头畸变。";
         Title = "DVD Calibrator · 照片标注与矫正" + (dirty ? " *" : "");
     }
+    private static string DenseState(string status) => status switch
+    {
+        "dense-review" => "密环候选待核对", "photo-insufficient" => "照片证据不足", "model-mismatch" => "观测与模型不一致",
+        "candidate-ambiguous" => "候选仍有歧义", "next-disc-review" => "下一张预测待核对", "next-disc-undersampled" => "下一张预测分辨率不足", _ => status
+    };
     private void ExportPreviews()
     {
         if (task?.Session.Rectification is null || calculation is not null) { SetStatus("请先计算联合矫正。"); return; }

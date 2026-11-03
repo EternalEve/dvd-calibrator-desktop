@@ -59,9 +59,10 @@ public sealed class PhotoTask
     public PhotoSession Session
     {
         get => session;
-        set { if (Fit is not null && RecordJson.Hash(value) != RecordJson.Hash(session)) Fit = null; session = value; }
+        set { if ((Fit is not null || Dense is not null) && RecordJson.Hash(value) != RecordJson.Hash(session)) { Fit = null; Dense = null; } session = value; }
     }
     public TraceFitReview? Fit { get; private set; }
+    public DenseAnalysis? Dense { get; private set; }
     public ImportedPhoto Photo { get; }
     public PhotoTask(SnapshotBundle snapshot, ImportedPhoto photo, PhotoSession? session = null)
     {
@@ -85,6 +86,17 @@ public sealed class PhotoTask
     public void AttachFit(TraceFitReview review)
     { review.Validate(Snapshot.Geometry, Snapshot.Hash, Session); Fit = review; }
     public void ClearFit() => Fit = null;
+    public GenerationSnapshot AnalyticSnapshot()
+    {
+        using var doc = RecordJson.ParseDocument(Encoding.UTF8.GetString(Snapshot.Files["generation.json"]).TrimStart('\uFEFF'));
+        if (doc.RootElement.GetProperty("recordType").GetString() != "generation-snapshot")
+            throw new ArgumentException("密环分析需要明确的解析半盘靶快照，当前外部图片的靶型未定义。请使用描线入口。");
+        return RecordJson.Parse<GenerationSnapshot>(doc.RootElement.GetRawText());
+    }
+    public DenseAnalysis AnalyzeDense(DenseSettings? settings = null, CancellationToken token = default)
+    { Validate(); return DenseAnalyzer.Analyze(AnalyticSnapshot(), Session, Photo.Image, settings, token); }
+    public void AttachDense(DenseAnalysis result)
+    { result.Verify(AnalyticSnapshot(), Session, Photo.Image); Dense = result; }
     public TraceFitReview FitTrace(TraceFitSettings? settings = null, CancellationToken token = default)
     {
         Validate();
@@ -99,6 +111,12 @@ public sealed class PhotoTask
         if (sessionJson.Length > RecordJson.MaxBytes) throw new ArgumentException("照片会话记录超过大小限制。");
         byte[]? fitJson = Fit is null ? null : JsonSerializer.SerializeToUtf8Bytes(Fit, RecordJson.Options);
         if (fitJson is not null && fitJson.Length > RecordJson.MaxBytes) throw new ArgumentException("拟合记录超过大小限制。");
+        byte[]? denseJson = Dense is null ? null : JsonSerializer.SerializeToUtf8Bytes(Dense, RecordJson.Options);
+        if (denseJson is not null)
+        {
+            Dense!.Verify(AnalyticSnapshot(), Session, Photo.Image);
+            if (denseJson.Length > RecordJson.MaxBytes) throw new ArgumentException("密环记录超过大小限制。");
+        }
         string target = Path.GetFullPath(path);
         if (File.Exists(target) || Directory.Exists(target)) throw new IOException("任务包已存在，请使用新文件名保存修订。");
         string parent = Path.GetDirectoryName(target)!; Directory.CreateDirectory(parent);
@@ -112,6 +130,7 @@ public sealed class PhotoTask
                 { using var entry = archive.CreateEntry(name, CompressionLevel.Fastest).Open(); entry.Write(bytes); }
                 Entry("session.json", sessionJson);
                 if (fitJson is not null) Entry("fit.json", fitJson);
+                if (denseJson is not null) Entry("dense.json", denseJson);
                 foreach (var (name, bytes) in Snapshot.Files) Entry("generation/" + name, bytes);
                 Entry("photo/original", Photo.OriginalBytes); Entry("photo/oriented.png", Photo.OrientedPng);
             }
@@ -147,7 +166,7 @@ public sealed class PhotoTask
                     throw new ArgumentException("不支持的生成附件路径。");
                 files[name] = Read(entry.FullName, name.EndsWith(".json", StringComparison.Ordinal) ? RecordJson.MaxBytes : PhotoCodec.MaxFileBytes);
             }
-            else if (entry.FullName is not ("session.json" or "photo/original" or "photo/oriented.png" or "fit.json"))
+            else if (entry.FullName is not ("session.json" or "photo/original" or "photo/oriented.png" or "fit.json" or "dense.json"))
                 throw new ArgumentException("任务包含未定义条目。");
         }
         var session = RecordJson.Parse<PhotoSession>(Encoding.UTF8.GetString(Read("session.json", RecordJson.MaxBytes)));
@@ -156,6 +175,8 @@ public sealed class PhotoTask
         var task = new PhotoTask(new(files), photo, session);
         if (archive.GetEntry("fit.json") is not null)
             task.AttachFit(RecordJson.Parse<TraceFitReview>(Encoding.UTF8.GetString(Read("fit.json", RecordJson.MaxBytes))));
+        if (archive.GetEntry("dense.json") is not null)
+            task.AttachDense(RecordJson.Parse<DenseAnalysis>(Encoding.UTF8.GetString(Read("dense.json", RecordJson.MaxBytes))));
         return task;
     }
 }

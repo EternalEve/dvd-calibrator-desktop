@@ -100,3 +100,19 @@ metadata 记录原始/定向文件哈希、RGB 像素哈希、原始/定向尺�
 `compensation-profile.schema.json` 对应完整参数主配置；导出时保留全部 double 精度，
 不把界面显示值回写，不把照片整体转角混入生成模型。所有导出保持 `physicalValidation=pending`。
 详情见 [描线拟合](trace-fitting.md)，结构 schema 通过不能代替运行时的输入绑定和语义验证。
+
+## 密环与下一张预测
+
+`dense-analysis.schema.json` 对应独立 `DenseAnalysis` v1，算法标识 `half-disc-multiangle-fragments-v1`。
+包含输入哈希、设置、有效源分辨率、相位片段、局部频谱/有符号相位斜率、全参数候选、整片圈数分支、
+训练/留出图像及相位误差、混合描线误差、完整重建曲线和下一张解析十字预测。
+全局明暗极性是显式离散分支；照片转角不写入补偿几何。固定扇区数、位长、方向和三项轨距形状，
+本版本只搜索两个半径。所有 double 原精度归档。
+
+结果状态限于 `photo-insufficient`、`model-mismatch`、`dense-review`、`candidate-ambiguous`；
+下一张另有 `next-disc-review`、`next-disc-undersampled` 和 `candidate-ambiguous`，均不是 `coarse-ready`。
+`NextDiscDiagnostic.Generated` 记录用于预测的 G1，`FinePattern` 明确 0.3 mm 解析十字；不创建实际 ISO 或宣布可刻录。
+
+可选 `dense.json` 与既有 `fit.json` 独立存入照片任务包。读取/附加/保存/导出时，`Verify` 从哈希绑定的定向原图重新提取观测，
+按候选全参数重新评分和构造曲线/下一张诊断，逐项内容哈希比较。不能给新参数沿用旧分支、曲线、分数或支持标记。
+这是一致性检查，不是数字签名；更改输入须重新计算。语义验证也不能由单独 JSON Schema 代替。

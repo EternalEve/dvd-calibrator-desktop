@@ -9,7 +9,7 @@ try
     if (args.Length == 0 || args is ["--help"] or ["help"])
     {
         Console.WriteLine("""
-            DvdCalibrator 0.3.0 — geometry, photo rectification and continuous trace fitting
+            DvdCalibrator 0.4.0 — geometry, photo rectification and continuous trace fitting
             demo --out NEW_FOLDER
             inspect --record SNAPSHOT_OR_DISCIMAGE_SIDECAR.json
             import-discimage --record SIDECAR.json --out NEW_FOLDER
