@@ -197,6 +197,7 @@ internal static class Program
             using var stream = File.Create(Path.Combine(output, "dense-desktop.png")); encoder.Save(stream);
         });
         TwoDiscChecks.Register(Test, output);
+        DesktopStateChecks.Register(Test, traceDemo);
         Console.WriteLine($"{passed}/{total} Windows imaging checks passed. Artifacts: {output}");
         return passed == total ? 0 : 1;
     }

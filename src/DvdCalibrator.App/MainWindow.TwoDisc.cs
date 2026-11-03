@@ -45,12 +45,12 @@ public sealed partial class MainWindow
     }
     private void ConfirmFine()
     {
-        if (twoDisc is null || calculation is not null) return;
+        if (twoDisc is null || calculation is not null || !MaskDraftReady()) return;
         twoDisc.ConfirmPlan(); dirty = true; Refresh(); SetStatus("第二张 G1 与固定原图契约已确认。导出标靶后用固定版本生成，再冻结真实旁车和原图；导入第二张时逐项核对。实刻仍待验证。");
     }
     private void ExportFineTarget()
     {
-        if (twoDisc is null || calculation is not null) return;
+        if (twoDisc is null || calculation is not null || !MaskDraftReady()) return;
         twoDisc.Validate();
         var dialog = new OpenFolderDialog { Title = "选择父目录，将新建第二张标靶与计划目录" }; if (dialog.ShowDialog() != true) return;
         string output = Path.Combine(dialog.FolderName, "fine-target-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"));
@@ -93,14 +93,14 @@ public sealed partial class MainWindow
     }
     private void ExportTwoDiscFinal()
     {
-        if (twoDisc is null || calculation is not null) return;
+        if (twoDisc is null || calculation is not null || !MaskDraftReady()) return;
         var dialog = new OpenFolderDialog { Title = "选择父目录，将新建最终配置与两盘追溯报告" }; if (dialog.ShowDialog() != true) return;
         string output = Path.Combine(dialog.FolderName, "two-disc-final-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"));
         twoDisc.ExportFinal(output); SetStatus("已导出第二张最终配置、工程兼容回读和两盘追溯报告；physicalValidation 仍为 pending：" + output);
     }
     private void CheckTwoDisc()
     {
-        if (twoDisc is null || calculation is not null) return;
+        if (twoDisc is null || calculation is not null || !MaskDraftReady()) return;
         var result = twoDisc.CheckConsistency();
         SetStatus($"两盘形状差 RMS {result.CoarseShapeRmsMm:F4} mm / 最大 {result.CoarseShapeMaximumMm:F4} mm；第二张有效线宽 {result.FineLineWidthPixels:F2} px。"
             + (result.Status == "final-review" ? "软件一致性检查通过，可导出带两盘来源的最终配置；实刻仍待验证。" : CalibrationGuidance.Describe([CalibrationGuidance.ForCode(result.Status)])));
@@ -113,10 +113,11 @@ public sealed partial class MainWindow
     public async Task LoadTwoDiscDemo()
     {
         if (calculation is not null || !MayReplace()) return;
-        calculation = new(); Refresh(); SetStatus("正在创建两盘合成任务，第一张分析与已确认计划均来自软件样本……");
+        calculation = new(); var token = calculation.Token; Refresh(); SetStatus("正在创建两盘合成任务，第一张分析与已确认计划均来自软件样本……");
         try
         {
-            var next = await Task.Run(() => SyntheticPhoto.CreateTwoDiscDemo(calculation.Token)); LoadTwoDiscTask(next); dirty = true;
+            var next = await Task.Run(() => SyntheticPhoto.CreateTwoDiscDemo(token), token);
+            token.ThrowIfCancellationRequested(); LoadTwoDiscTask(next); dirty = true;
             SetStatus("两盘软件演示：第一张粗调与 G1 计划已模拟确认，第二张使用固定 target_slim 原图和独立照片。点击“拟合描线”，核对并确认候选后可导出两盘最终配置。");
         }
         catch (OperationCanceledException) { SetStatus("两盘演示创建已取消，原有任务保留。"); }

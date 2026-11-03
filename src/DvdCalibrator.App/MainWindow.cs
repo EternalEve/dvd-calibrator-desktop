@@ -33,7 +33,7 @@ public sealed partial class MainWindow : Window
     private readonly TextBlock status = new() { TextWrapping = TextWrapping.Wrap, Margin = new(14, 8, 14, 8) };
     private readonly TextBlock detail = new() { TextWrapping = TextWrapping.Wrap, Margin = new(14), FontSize = 13 };
     private readonly TextBlock counts = new() { Margin = new(8), VerticalAlignment = VerticalAlignment.Center };
-    private readonly Button fitButton, confirmButton, saveButton;
+    private readonly Button fitButton, confirmButton, saveButton, cancelButton;
     private readonly Slider zoomSlider = new() { Name = "SourceZoom", Minimum = .08, Maximum = 5, Value = 1, Width = 130, Margin = new(10), VerticalAlignment = VerticalAlignment.Center };
     private readonly List<PixelPoint> draftMask = [];
     private int selected = -1;
@@ -76,7 +76,7 @@ public sealed partial class MainWindow : Window
         var actions = new WrapPanel { Margin = new(8) };
         fitButton = Button("计算联合矫正", async () => await Compute()); actions.Children.Add(fitButton);
         confirmButton = Button("确认矫正", Confirm); actions.Children.Add(confirmButton);
-        actions.Children.Add(Button("取消计算", () => calculation?.Cancel()));
+        cancelButton = Button("取消计算", CancelCalculation); actions.Children.Add(cancelButton);
         DockPanel.SetDock(actions, Dock.Top); right.Children.Add(actions);
         var fitting = new StackPanel { Margin = new(8, 0, 8, 0) };
         var options = new WrapPanel(); options.Children.Add(shapeOrder);
@@ -94,7 +94,16 @@ public sealed partial class MainWindow : Window
         tabs.Items.Add(new TabItem { Header = "正视预览", Content = rectified });
         tabs.Items.Add(new TabItem { Header = "极坐标 · 横向逆时针角 / 纵向半径", Content = polar }); right.Children.Add(tabs);
         tabs.Items.Add(new TabItem { Header = "第二张完整预测", Content = fineForecastImage });
-        mode.SelectionChanged += (_, _) => { selected = -1; draftMask.Clear(); Draw(); };
+        mode.SelectionChanged += (_, _) =>
+        {
+            if (draftMask.Count > 0 && mode.SelectedIndex != 2)
+            {
+                mode.SelectedIndex = 2;
+                SetStatus("遮罩草稿尚未结束，请点击“结束遮罩”，或按 Esc 放弃草稿后再切换模式。");
+                return;
+            }
+            selected = -1; Draw();
+        };
         shapeOrder.SelectionChanged += (_, _) => { if (!updatingCandidates && task?.Fit is not null) { task.ClearFit(); dirty = true; Refresh(); Draw(); } };
         candidateBox.SelectionChanged += (_, _) =>
         {
@@ -107,8 +116,16 @@ public sealed partial class MainWindow : Window
         canvas.MouseRightButtonDown += (_, e) => { panStart = e.GetPosition(scroll); panX = scroll.HorizontalOffset; panY = scroll.VerticalOffset; canvas.CaptureMouse(); e.Handled = true; };
         canvas.MouseRightButtonUp += (_, _) => { panStart = null; canvas.ReleaseMouseCapture(); };
         canvas.PreviewMouseWheel += (_, e) => { zoomSlider.Value = Math.Clamp(zoomSlider.Value * (e.Delta > 0 ? 1.15 : 1 / 1.15), .08, 5); e.Handled = true; };
-        canvas.KeyDown += (_, e) => { if (e.Key == Key.Delete) DeleteSelected(); if (e.Key == Key.Escape) { draftMask.Clear(); Draw(); } };
-        Closing += (_, e) => { if (calculation is not null || !MayReplace()) e.Cancel = true; };
+        canvas.KeyDown += (_, e) => { if (e.Key == Key.Delete) DeleteSelected(); if (e.Key == Key.Escape) { draftMask.Clear(); selected = -1; Refresh(); Draw(); } };
+        Closing += (_, e) =>
+        {
+            if (calculation is not null)
+            {
+                e.Cancel = true;
+                SetStatus("计算尚未结束。请先点击“取消计算”，等待取消完成，再保存或关闭窗口。");
+            }
+            else if (!MayReplace()) e.Cancel = true;
+        };
         Loaded += (_, _) => { FitView(); if (task?.Session.Rectification is not null && rectified.Source is null) _ = RefreshPreviews(); };
         SetStatus("先打开与实体盘对应的生成快照，再导入照片；也可载入合成演示体验标注流程。"); Refresh();
     }
@@ -123,7 +140,19 @@ public sealed partial class MainWindow : Window
         or System.Text.Json.JsonException or InvalidOperationException or NotSupportedException or KeyNotFoundException
         or FormatException or OverflowException or System.Runtime.InteropServices.COMException;
     private void SetStatus(string text) => status.Text = text;
-    private bool MayReplace() => !dirty || MessageBox.Show("当前修改尚未保存。放弃这些修改并继续？", "未保存的照片任务", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes;
+    private bool MayReplace() => !dirty || MessageBox.Show(this, "当前修改尚未保存。放弃这些修改并继续？", "未保存的照片任务",
+        MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+    private bool MaskDraftReady()
+    {
+        if (draftMask.Count == 0) return true;
+        SetStatus("遮罩草稿尚未结束。请点击“结束遮罩”，或按 Esc 放弃草稿后再计算、确认或导出。");
+        return false;
+    }
+    private void CancelCalculation()
+    {
+        if (calculation is null) return;
+        calculation.Cancel(); SetStatus("正在取消计算，请等待完成；原有观测和已完成的结果会保留。");
+    }
 
     private void OpenSnapshot()
     {
@@ -330,16 +359,22 @@ public sealed partial class MainWindow : Window
     }
     private async Task Compute()
     {
-        if (task is null || calculation is not null) return;
-        var input = task.Session; calculation = new(); Refresh(); SetStatus("正在联合拟合实体外缘和中心孔，可取消……");
+        if (task is null || calculation is not null || !MaskDraftReady()) return;
+        var input = task; var session = input.Session; calculation = new(); var token = calculation.Token;
+        Refresh(); SetStatus("正在联合拟合实体外缘和中心孔，可取消……");
         try
         {
-            var result = await Task.Run(() => input.Rectify(calculation.Token));
-            task.Session = result; dirty = true; Draw();
-            await RenderPreviews(); SetStatus("矫正计算完成。请核对正视预览及橙色轮廓；满意后点击“确认矫正”。");
+            var result = await Task.Run(() =>
+            {
+                var next = session.Rectify(token);
+                return (Session: next, Images: RenderPreviewImages(input, next, token));
+            }, token);
+            token.ThrowIfCancellationRequested();
+            input.Session = result.Session; ApplyPreviews(result.Images); dirty = true; Draw();
+            SetStatus("矫正计算完成。请核对正视预览及橙色轮廓；满意后点击“确认矫正”。");
         }
-        catch (OperationCanceledException) { SetStatus("计算已取消，原图与标注保留。"); }
-        catch (Exception e) when (Expected(e)) { ClearPreviews(); SetStatus(CalibrationGuidance.Describe(e)); }
+        catch (OperationCanceledException) { SetStatus("矫正计算已取消，原图、标注和原有结果保留。"); }
+        catch (Exception e) when (Expected(e)) { SetStatus(CalibrationGuidance.Describe(e)); }
         finally { calculation.Dispose(); calculation = null; Refresh(); }
     }
     private async Task RefreshPreviews()
@@ -354,59 +389,67 @@ public sealed partial class MainWindow : Window
     private async Task RenderPreviews()
     {
         if (task is null) return;
-        var source = task.Photo.Image; var session = task.Session; var geometry = task.Snapshot.Geometry;
+        var input = task; var session = input.Session;
         var token = calculation?.Token ?? default;
-        var images = await Task.Run(() => (
-            PhotoRaster.Render(source, session, 640, 640, false, token: token),
-            PhotoRaster.Render(source, session, 960, 400, true, geometry.InnerRadiusMm, geometry.OuterRadiusMm, token)), token);
-        rectified.Source = PhotoCodec.Bitmap(images.Item1); polar.Source = PhotoCodec.Bitmap(images.Item2);
+        var images = await Task.Run(() => RenderPreviewImages(input, session, token), token);
+        token.ThrowIfCancellationRequested(); ApplyPreviews(images);
     }
+    private static (RgbImage Rectified, RgbImage Polar) RenderPreviewImages(PhotoTask input, PhotoSession session, CancellationToken token)
+    {
+        var source = input.Photo.Image; var geometry = input.Snapshot.Geometry;
+        return (PhotoRaster.Render(source, session, 640, 640, false, token: token),
+            PhotoRaster.Render(source, session, 960, 400, true, geometry.InnerRadiusMm, geometry.OuterRadiusMm, token));
+    }
+    private void ApplyPreviews((RgbImage Rectified, RgbImage Polar) images)
+    { rectified.Source = PhotoCodec.Bitmap(images.Rectified); polar.Source = PhotoCodec.Bitmap(images.Polar); }
     private void Confirm()
     {
-        if (task is null || calculation is not null) return;
+        if (task is null || calculation is not null || !MaskDraftReady()) return;
         task.Session = task.Session.Confirm(); dirty = true; Refresh(); SetStatus("照片矫正已确认，可切换“径向线描点”，沿同一条边界从内向外取点。");
     }
     public async Task ComputeTraceFit()
     {
-        if (task is null || calculation is not null) return;
+        if (task is null || calculation is not null || !MaskDraftReady()) return;
         var input = task; var settings = TraceFitSettings.Default with { ShapeOrder = shapeOrder.SelectedIndex };
-        task.ClearFit(); calculation = new(); Refresh(); Draw(); SetStatus("正在按连续角度拟合；主线外侧 25% 与对侧线不参与优化，可取消……");
+        calculation = new(); var token = calculation.Token; Refresh(); SetStatus("正在按连续角度拟合；主线外侧 25% 与对侧线不参与优化，可取消……");
         try
         {
-            var review = await Task.Run(() => input.FitTrace(settings, calculation.Token));
+            var review = await Task.Run(() => input.FitTrace(settings, token), token);
+            token.ThrowIfCancellationRequested();
             input.AttachFit(review); dirty = true; Draw();
             SetStatus(review.Selected.EligibleForReview
                 ? "拟合完成。橙线为完整模型预测；请检查点间走向与留出区域，确认没有漏圈或换臂后再确认候选。"
                 : CalibrationGuidance.Describe(CalibrationGuidance.ForTrace(review)));
         }
-        catch (OperationCanceledException) { SetStatus("描线拟合已取消，照片与观测保留。"); }
+        catch (OperationCanceledException) { SetStatus("描线拟合已取消，照片、观测和原有候选保留。"); }
         catch (Exception e) when (Expected(e)) { SetStatus(CalibrationGuidance.Describe(e)); }
         finally { calculation.Dispose(); calculation = null; Refresh(); }
     }
     private void ConfirmTraceFit()
     {
-        if (task?.Fit is null || calculation is not null) return;
+        if (task?.Fit is null || calculation is not null || !MaskDraftReady()) return;
         task.AttachFit(task.Fit.Confirm(task.Snapshot.Geometry, task.Snapshot.Hash, task.Session));
         dirty = true; Refresh(); SetStatus("当前候选曲线已确认，可以导出完整补偿配置与诊断报告；实刻验证状态仍为 pending。");
     }
     public async Task ComputeDense()
     {
-        if (task is null || calculation is not null) return;
-        var input = task; calculation = new(); Refresh(); SetStatus("正在从原图提取多角度变频片段并拟合；缺失区保留为空，奇数角度及径向末段用于留出检查，可取消……");
+        if (task is null || calculation is not null || !MaskDraftReady()) return;
+        var input = task; calculation = new(); var token = calculation.Token; Refresh(); SetStatus("正在从原图提取多角度变频片段并拟合；缺失区保留为空，奇数角度及径向末段用于留出检查，可取消……");
         try
         {
-            var result = await Task.Run(() => input.AnalyzeDense(token: calculation.Token));
+            var result = await Task.Run(() => input.AnalyzeDense(token: token), token);
+            token.ThrowIfCancellationRequested();
             input.AttachDense(result); dirty = true; Draw();
             var issues = CalibrationGuidance.ForDense(result);
             SetStatus(issues.IsEmpty ? "密环分析完成。紫线为完整模型，蓝线为可观测片段；请导出诊断核对所有候选和下一张预测。" : CalibrationGuidance.Describe(issues));
         }
-        catch (OperationCanceledException) { SetStatus("密环分析已取消，照片与已保存观测保留。"); }
+        catch (OperationCanceledException) { SetStatus("密环分析已取消，照片、观测和原有分析保留。"); }
         catch (Exception e) when (Expected(e)) { SetStatus(CalibrationGuidance.Describe(e)); }
         finally { calculation.Dispose(); calculation = null; Refresh(); }
     }
     private void ExportDense()
     {
-        if (task?.Dense is null || calculation is not null) return;
+        if (task?.Dense is null || calculation is not null || !MaskDraftReady()) return;
         var dialog = new OpenFolderDialog { Title = "选择父目录，将新建密环诊断目录" };
         if (dialog.ShowDialog() != true) return;
         string path = System.IO.Path.Combine(dialog.FolderName, "dense-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"));
@@ -415,7 +458,7 @@ public sealed partial class MainWindow : Window
     }
     private void ExportProfile()
     {
-        if (task?.Fit is null || calculation is not null) return;
+        if (task?.Fit is null || calculation is not null || !MaskDraftReady()) return;
         var dialog = new OpenFolderDialog { Title = "选择父目录，将在其中新建标定导出目录" };
         if (dialog.ShowDialog() != true) return;
         string path = System.IO.Path.Combine(dialog.FolderName, "calibration-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"));
@@ -434,10 +477,10 @@ public sealed partial class MainWindow : Window
         candidateBox.SelectedIndex = review is null ? -1 : review.Result.Candidates.IndexOf(review.Selected);
         updatingCandidates = false;
         candidateBox.IsEnabled = review is not null && calculation is null; shapeOrder.IsEnabled = calculation is null;
-        traceFitButton.IsEnabled = task?.Session.IsConfirmed == true && calculation is null;
+        traceFitButton.IsEnabled = task?.Session.IsConfirmed == true && calculation is null && draftMask.Count == 0;
         traceConfirmButton.IsEnabled = review is not null && review.Selected.EligibleForReview && !review.IsConfirmed
-            && review.Result.QualityStatus != "candidate-ambiguous" && calculation is null;
-        profileButton.IsEnabled = review?.IsConfirmed == true && calculation is null;
+            && review.Result.QualityStatus != "candidate-ambiguous" && calculation is null && draftMask.Count == 0;
+        profileButton.IsEnabled = review?.IsConfirmed == true && calculation is null && draftMask.Count == 0;
         string State(string code) => code switch
         { "fit-review" => "待曲线核对", "model-mismatch" => "观测与模型尚不一致", "candidate-ambiguous" => "候选仍有歧义", _ => "搜索范围受限" };
         fitDetail.Text = review is null ? "主线至少 24 点、覆盖 60% 环带；末段 25% 留出。\n可补充明确对侧 180° 的独立检查线。"
@@ -448,20 +491,22 @@ public sealed partial class MainWindow : Window
     private void Refresh()
     {
         bool busy = calculation is not null;
-        fitButton.IsEnabled = task is not null && !busy; saveButton.IsEnabled = task is not null && !busy;
-        confirmButton.IsEnabled = task?.Session.Rectification is not null && rectified.Source is not null && !busy && !task.Session.IsConfirmed;
+        fitButton.IsEnabled = task is not null && !busy && draftMask.Count == 0; saveButton.IsEnabled = task is not null && !busy && draftMask.Count == 0;
+        confirmButton.IsEnabled = task?.Session.Rectification is not null && rectified.Source is not null && !busy && !task.Session.IsConfirmed && draftMask.Count == 0;
+        cancelButton.IsEnabled = busy;
         mode.IsEnabled = !busy;
         RefreshFit();
         RefreshTwoDisc();
-        denseButton.IsEnabled = task?.Session.IsConfirmed == true && !busy;
-        denseExportButton.IsEnabled = task?.Dense is not null && !busy;
+        denseButton.IsEnabled = task?.Session.IsConfirmed == true && !busy && draftMask.Count == 0;
+        denseExportButton.IsEnabled = task?.Dense is not null && !busy && draftMask.Count == 0;
         var dense = task?.Dense; var best = dense?.Candidates.FirstOrDefault(c => c.Supported);
         denseDetail.Text = dense is null ? "密环入口：已知解析半盘靶，可联合局部主边界描线。" :
             $"{DenseState(dense.QualityStatus)} · 片段 {dense.Observations.Fragments.Length} · 有效径向 {dense.Observations.UsableRadialFraction:P0}\n"
             + (best is null ? CalibrationGuidance.Describe(CalibrationGuidance.ForDense(dense)) : $"ri {best.Parameters.InnerRadiusMm:F6} / ro {best.Parameters.OuterRadiusMm:F6} mm\n图像训练/留出 {best.TrainingImageError:F3} / {best.HoldoutImageError:F3} · 相位留出 {best.HoldoutPhaseRmsRadians:F3} rad\n{DenseState(dense.NextDisc?.Status ?? "photo-insufficient")}；实刻待验证。");
         if (task is null) { counts.Text = "未导入照片"; detail.Text = "1  打开冻结生成快照并导入照片\n2  标外缘/孔缘并确认矫正\n3  连续边界可描线拟合\n4  已知半盘可分析密环或混合观测\n5  核对报告、候选与完整预测"; return; }
         var s = task.Session;
-        counts.Text = $"外缘 {s.OuterBoundary.Length} 点  ·  孔缘 {s.HoleBoundary.Length} 点  ·  遮罩 {s.Masks.Length} 处  ·  描线 {s.Traces.Sum(t => t.Points.Length)} 点";
+        counts.Text = $"外缘 {s.OuterBoundary.Length} 点  ·  孔缘 {s.HoleBoundary.Length} 点  ·  遮罩 {s.Masks.Length} 处  ·  描线 {s.Traces.Sum(t => t.Points.Length)} 点"
+            + (draftMask.Count > 0 ? $"  ·  遮罩草稿 {draftMask.Count} 点（未应用）" : "");
         detail.Text = $"原图 {s.Photo.OriginalWidth} × {s.Photo.OriginalHeight}  →  定向后 {s.Photo.OrientedWidth} × {s.Photo.OrientedHeight}\nEXIF 方向 {s.Photo.AppliedExifOrientation}  ·  缩放 {zoomSlider.Value:P0}\n观察面约定：记录面\n快照 {s.SnapshotId}\n"
             + (s.Rectification is null ? "待计算联合矫正" : $"外缘 RMS {s.Rectification.OuterRmsPixels:F3} px  ·  孔缘 RMS {s.Rectification.HoleRmsPixels:F3} px\n" + (s.IsConfirmed ? "矫正已确认" : "待核对确认"))
             + "\n\n遮罩在原图上绘制多边形后点击“结束遮罩”。\n极坐标左→右：0°→360°（逆时针）；上→下：生成内半径→外半径。\n照片矫正不会消除镜头畸变。";
@@ -474,6 +519,7 @@ public sealed partial class MainWindow : Window
     };
     private void ExportPreviews()
     {
+        if (!MaskDraftReady()) return;
         if (task?.Session.Rectification is null || calculation is not null) { SetStatus("请先计算联合矫正。"); return; }
         var dialog = new SaveFileDialog { Filter = "正视预览 PNG|*.png", FileName = "rectified.png", OverwritePrompt = false };
         if (dialog.ShowDialog() != true) return;
