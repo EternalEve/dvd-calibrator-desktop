@@ -83,12 +83,13 @@ public sealed class ForwardModel
 {
     public TrackGeometry Generated { get; }
     public TrackGeometry Actual { get; }
-    public ForwardModel(GeometryParameters generated, GeometryParameters actual)
+    public ForwardModel(GeometryParameters generated, GeometryParameters actual) : this(new TrackGeometry(generated), new TrackGeometry(actual)) { }
+    public ForwardModel(TrackGeometry generated, TrackGeometry actual)
     {
-        if (generated.TotalSectors != actual.TotalSectors || generated.StartLba != actual.StartLba)
+        if (generated.Parameters.TotalSectors != actual.Parameters.TotalSectors || generated.Parameters.StartLba != actual.Parameters.StartLba)
             throw new ArgumentException("正向映射要求相同通道位数和数据起点。");
-        Generated = new(generated);
-        Actual = new(actual);
+        Generated = generated;
+        Actual = actual;
     }
 
     public ForwardPoint AtRadius(double observedRadiusMm, double sourceAngleRadians = 0, double rotationRadians = 0)

@@ -31,3 +31,8 @@ solve --image upstream-input.bmp --iso-output .local/upstream-fixture.iso
 `photo-session-v2.synthetic.json` 来自 `SyntheticPhoto.Create()` 的已知投影圆周，用于 CLI 几何回归。
 这是无照片附件的独立 JSON，不是实拍任务包。Windows 图像检查在各自 artifacts 目录产出
 同类 `draft-session.json`、完整 `.dvdphoto` 和预览，可用于重建该软件样例。
+
+`trace-fit-generation.synthetic.json` 与 `trace-fit-session.synthetic.json` 是
+`SyntheticPhoto.CreateTraceDemo()` 的冻结生成记录和已知投影描线，供 CLI 拟合/导出回归。
+它们来自隐藏半径 24.0002/58.0004 mm 的完整模型，不是实拍测量值。
+Windows 检查会输出可恢复的 `trace-fit.dvdphoto`、源图、配置、工程和报告。

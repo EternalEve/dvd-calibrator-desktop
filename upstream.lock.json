@@ -14,6 +14,16 @@
     "local": "third_party/DiscImageStudio/CalibrationPhotoRectifier.cs",
     "sha256": "85128a0141dc97762632361e4ebf1f678cfd9fefd421bd2959c6d36808b37966",
     "modified": false
+  }, {
+    "source": "src/DiscImageStudio.Core/ProjectJsonStore.cs",
+    "local": "third_party/DiscImageStudio/ProjectJsonStore.cs",
+    "sha256": "f0ecf6357ce85c19cc64046586c331520dea1ea0a39dca3db64fe4a472e7fc4c",
+    "modified": false
+  }, {
+    "source": "src/DiscImageStudio.Core/ToneProfile.cs",
+    "local": "third_party/DiscImageStudio/ToneProfile.cs",
+    "sha256": "2d7738015d0d91e48819ab6095b71beffe3d50c6f9987134b7be6d27875ef1b0",
+    "modified": false
   }],
   "recordAdapter": "dvd-nrzi-disc-fill-v2/dispersion/full-disc",
   "note": "Parser compatibility baseline only. Upstream sidecars do not establish the executable commit or source image hash."

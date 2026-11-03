@@ -44,4 +44,15 @@ $null = Invoke-Cli 0 @('rectify', '--session', (Join-Path $projectRoot 'fixtures
 $rectification = Get-Content -LiteralPath (Join-Path $rectifyFolder 'photo-session.json') -Raw | ConvertFrom-Json
 if ($null -eq $rectification.rectification -or $null -ne $rectification.confirmedRectificationSha256) { throw 'CLI rectification confirmation semantics failed.' }
 $null = Invoke-Cli 3 @('rectify', '--session', (Join-Path $projectRoot 'fixtures/photo-session-v2.synthetic.json'), '--out', $rectifyFolder)
-Write-Output "PASS CLI demo / prediction / import / overwrite / invalid-input checks ($runRoot)"
+$fitFolder = Join-Path $runRoot 'fit'
+$fitSession = Join-Path $projectRoot 'fixtures/trace-fit-session.synthetic.json'
+$fitGeneration = Join-Path $projectRoot 'fixtures/trace-fit-generation.synthetic.json'
+$null = Invoke-Cli 0 @('fit-trace', '--generated', $fitGeneration, '--session', $fitSession, '--out', $fitFolder)
+$reviewPath = Join-Path $fitFolder 'fit-review.json'
+$profileFolder = Join-Path $runRoot 'profile'
+$null = Invoke-Cli 2 @('export-profile', '--review', $reviewPath, '--session', $fitSession, '--out', $profileFolder)
+$null = Invoke-Cli 0 @('export-profile', '--review', $reviewPath, '--session', $fitSession, '--out', $profileFolder, '--confirm-curve', 'true')
+$profile = Get-Content -LiteralPath (Join-Path $profileFolder 'calibration-profile.json') -Raw | ConvertFrom-Json
+if ($profile.physicalValidation -ne 'pending' -or -not (Test-Path -LiteralPath (Join-Path $profileFolder 'candidate.discproj'))) { throw 'Profile export contract failed.' }
+$null = Invoke-Cli 3 @('export-profile', '--review', $reviewPath, '--session', $fitSession, '--out', $profileFolder, '--confirm-curve', 'true')
+Write-Output "PASS CLI generation / photo / fit / profile / failure-path checks ($runRoot)"

@@ -1,0 +1,328 @@
+{
+  "type": "object",
+  "properties": {
+    "result": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": {
+          "type": "integer"
+        },
+        "recordType": {
+          "type": "string"
+        },
+        "algorithmVersion": {
+          "type": "string"
+        },
+        "snapshotSha256": {
+          "type": "string"
+        },
+        "sessionSha256": {
+          "type": "string"
+        },
+        "generated": {
+          "type": "object",
+          "properties": {
+            "innerRadiusMm": {
+              "type": "number"
+            },
+            "outerRadiusMm": {
+              "type": "number"
+            },
+            "totalSectors": {
+              "type": "integer"
+            },
+            "channelBitLengthNm": {
+              "type": "number"
+            },
+            "pitchLinear": {
+              "type": "number"
+            },
+            "pitchQuadratic": {
+              "type": "number"
+            },
+            "pitchCubic": {
+              "type": "number"
+            },
+            "direction": {
+              "enum": [
+                "cw",
+                "ccw"
+              ]
+            },
+            "directionConvention": {
+              "type": "string"
+            },
+            "startLba": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "innerRadiusMm",
+            "outerRadiusMm",
+            "totalSectors",
+            "channelBitLengthNm",
+            "pitchLinear",
+            "pitchQuadratic",
+            "pitchCubic",
+            "direction",
+            "directionConvention",
+            "startLba"
+          ],
+          "additionalProperties": false
+        },
+        "settings": {
+          "type": "object",
+          "properties": {
+            "shapeOrder": {
+              "type": "integer"
+            },
+            "radiusRangeMm": {
+              "type": "number"
+            },
+            "shapeRange": {
+              "type": "number"
+            },
+            "huberDeltaMm": {
+              "type": "number"
+            },
+            "maximumRmsMm": {
+              "type": "number"
+            },
+            "maximumErrorMm": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "shapeOrder",
+            "radiusRangeMm",
+            "shapeRange",
+            "huberDeltaMm",
+            "maximumRmsMm",
+            "maximumErrorMm"
+          ],
+          "additionalProperties": false
+        },
+        "searchedRadiusRangeMm": {
+          "type": "number"
+        },
+        "qualityStatus": {
+          "type": "string"
+        },
+        "physicalValidation": {
+          "type": "string"
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "parameters": {
+                "type": "object",
+                "properties": {
+                  "innerRadiusMm": {
+                    "type": "number"
+                  },
+                  "outerRadiusMm": {
+                    "type": "number"
+                  },
+                  "totalSectors": {
+                    "type": "integer"
+                  },
+                  "channelBitLengthNm": {
+                    "type": "number"
+                  },
+                  "pitchLinear": {
+                    "type": "number"
+                  },
+                  "pitchQuadratic": {
+                    "type": "number"
+                  },
+                  "pitchCubic": {
+                    "type": "number"
+                  },
+                  "direction": {
+                    "enum": [
+                      "cw",
+                      "ccw"
+                    ]
+                  },
+                  "directionConvention": {
+                    "type": "string"
+                  },
+                  "startLba": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "innerRadiusMm",
+                  "outerRadiusMm",
+                  "totalSectors",
+                  "channelBitLengthNm",
+                  "pitchLinear",
+                  "pitchQuadratic",
+                  "pitchCubic",
+                  "direction",
+                  "directionConvention",
+                  "startLba"
+                ],
+                "additionalProperties": false
+              },
+              "shapeOrder": {
+                "type": "integer"
+              },
+              "rotationRadians": {
+                "type": "number"
+              },
+              "robustCost": {
+                "type": "number"
+              },
+              "trainingRmsMm": {
+                "type": "number"
+              },
+              "holdoutRmsMm": {
+                "type": "number"
+              },
+              "maxErrorMm": {
+                "type": "number"
+              },
+              "parameterCorrelation": {
+                "type": "number"
+              },
+              "boundaryLimited": {
+                "type": "boolean"
+              },
+              "eligibleForReview": {
+                "type": "boolean"
+              },
+              "rejectionReasons": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "residuals": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "traceId": {
+                      "type": "string"
+                    },
+                    "sourceIndex": {
+                      "type": "integer"
+                    },
+                    "isHoldout": {
+                      "type": "boolean"
+                    },
+                    "errorMm": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "traceId",
+                    "sourceIndex",
+                    "isHoldout",
+                    "errorMm"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "curve": {
+                "type": "array",
+                "items": {
+                  "type": [
+                    "object",
+                    "null"
+                  ],
+                  "properties": {
+                    "radiusMm": {
+                      "type": "number"
+                    },
+                    "angleRadians": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "radiusMm",
+                    "angleRadians"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "id",
+              "parameters",
+              "shapeOrder",
+              "rotationRadians",
+              "robustCost",
+              "trainingRmsMm",
+              "holdoutRmsMm",
+              "maxErrorMm",
+              "parameterCorrelation",
+              "boundaryLimited",
+              "eligibleForReview",
+              "rejectionReasons",
+              "residuals",
+              "curve"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "recordType",
+        "algorithmVersion",
+        "snapshotSha256",
+        "sessionSha256",
+        "generated",
+        "settings",
+        "searchedRadiusRangeMm",
+        "qualityStatus",
+        "physicalValidation",
+        "candidates",
+        "warnings"
+      ],
+      "additionalProperties": false
+    },
+    "selectedCandidateId": {
+      "type": "string"
+    },
+    "confirmedCandidateSha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "result",
+    "selectedCandidateId",
+    "confirmedCandidateSha256"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:trace-fit-review:v1"
+}

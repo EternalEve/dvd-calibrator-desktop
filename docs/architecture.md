@@ -1,12 +1,14 @@
 # 架构决策与几何约定
 
-日期：2026-11-03；阶段：A/B。
+日期：2026-11-03；阶段：A/B/C。
 
 ## 运行时与复用边界
 
 使用 C# / .NET 10；Core 和 CLI 不依赖 WPF、浏览器或 Python。后续 Windows 桌面界面使用 WPF。
 第一阶段直接编译 `third_party/DiscImageStudio/DvdTrackGeometry.cs`，不另写生产几何。
 第二阶段同样复用该提交的 `CalibrationPhotoRectifier.cs`，仅补坐标兼容类型，不修改上游算法。
+第三阶段新增本地连续相位求解器，复用同一正向几何，不把上游耦合其标靶/坐标格式的拟合器直接套到新会话。
+工程导出复用同提交的 `ProjectJsonStore.cs` 和 `ToneProfile.cs`，实际 Save/Load 后核对可表达参数。
 它是上游 Core 中可独立编译的源文件，不拉入上游界面、刻录或编码依赖。
 
 基准提交、路径和文件字节哈希记录在 `upstream.lock.json`。来源：

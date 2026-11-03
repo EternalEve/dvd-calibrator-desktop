@@ -2,5 +2,7 @@
   <ItemGroup>
     <Compile Include="../../third_party/DiscImageStudio/DvdTrackGeometry.cs" Link="Upstream/DvdTrackGeometry.cs" />
     <Compile Include="../../third_party/DiscImageStudio/CalibrationPhotoRectifier.cs" Link="Upstream/CalibrationPhotoRectifier.cs" />
+    <Compile Include="../../third_party/DiscImageStudio/ProjectJsonStore.cs" Link="Upstream/ProjectJsonStore.cs" />
+    <Compile Include="../../third_party/DiscImageStudio/ToneProfile.cs" Link="Upstream/ToneProfile.cs" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 # DVD Calibrator Desktop
 
-12 cm 单层 DVD 标定工具。当前版本 **0.2.0，阶段 B：照片标注与联合矫正**。
-已有 Windows WPF 桌面界面、照片任务包与正向模型命令行；粗调/精调反推尚未实现。
+12 cm 单层 DVD 标定工具。当前版本 **0.3.0，阶段 C：人工描线拟合与补偿导出**。
+已有照片标注、连续描线拟合、候选叠加和配置导出；密集环自动求解及完整两张盘向导尚未实现。
 
 目标是在人工确认下，以一张粗调盘、一张精调盘为正常路径，获得供
 DiscImageStudio 使用的等效补偿参数。两张盘完成率需要后续实盘验证。
@@ -9,7 +9,10 @@ DiscImageStudio 使用的等效补偿参数。两张盘完成率需要后续实�
 ## 当前能力
 
 - 导入原图并应用全部 8 种 EXIF 定向，保留原始字节和原分辨率定向 PNG。
-- 桌面外缘/孔缘布点与拖点、缩放平移、反光多边形遮罩和单条径向线描点。
+- 桌面外缘/孔缘布点与拖点、缩放平移、反光遮罩、主径向线及对侧 180° 检查线。
+- 保留累计圈数的完整模型拟合，主线外侧 25% 留出；默认修半径，可按证据增加一至三阶形状。
+- 候选曲线叠加、逐点残差、训练/留出诊断、输入变化失效及人工确认。
+- 导出完整补偿 JSON、CSV/SVG/HTML 报告；兼容时附带经实际加载器回读的 DiscImageStudio 工程。
 - 联合双圆透视恢复，直接采样原图生成正视/极坐标预览，显示轮廓 RMS 并人工确认。
 - 自带照片和生成附件的 `.dvdphoto` 任务包，支持换目录恢复与哈希检查。
 - 固定 DiscImageStudio 提交 `374c0630326ea61be9adca8d7de3c96f083c00df`，直接复用其完整 DVD 几何源文件。
@@ -41,15 +44,16 @@ dotnet run --project tests/DvdCalibrator.Tests -c Release --no-build
 
 ## 运行合成示例
 
-启动桌面界面（去掉 `-- --demo` 即为空白任务入口）：
+启动带已知生成模型与主/检查线的拟合演示（去掉参数即为空白任务入口）：
 
 ```powershell
-dotnet run --project src/DvdCalibrator.App -c Release -- --demo
+dotnet run --project src/DvdCalibrator.App -c Release -- --trace-demo
 ```
 
 真实任务先打开第一阶段冻结的 `generation.json`，再导入对应盘片的记录面照片。
 沿实体外缘与真实孔缘各标 8–16 点，计算、核对并确认矫正。任务包使用新文件名保存修订。
-操作细节见 [照片工作流](docs/photo-workflow.md)。演示是数学生成图，不是实盘验证。
+矫正确认后沿同一条源径向边界描点，点击“拟合描线”，核对完整预测线与留出区域，再确认导出。
+操作细节见 [照片工作流](docs/photo-workflow.md) 和 [描线拟合](docs/trace-fitting.md)。演示是数学生成图，不是实盘验证。
 
 所有输出目录必须尚不存在。重复运行时请使用新目录名。
 
@@ -86,11 +90,11 @@ SVG 显示半盘边界或十字中心线；PGM（P5）是标准灰度图，`sour
 | `fixtures` | 真实上游输出的最小软件测试样例 |
 | `docs` | 架构决策、坐标约定、数据与阶段验收 |
 
-下一阶段完成人工描线粗调/精调、候选叠加与配置导出闭环，再加入密集环与两张盘工作流。
+下一阶段加入密集环和混合观测入口，再验证标靶与完整两张盘工作流。
 Core/CLI 继续目标为 `net10.0`；图像与桌面项目为 `net10.0-windows`。
 
 详见 [架构与坐标](docs/architecture.md)、[数据契约](docs/data-contracts.md)、
-[阶段 A 验收](docs/phase-a-validation.md)、[阶段 B 验收](docs/phase-b-validation.md) 与 [CHANGELOG](CHANGELOG.md)。
+[阶段 A 验收](docs/phase-a-validation.md)、[阶段 B 验收](docs/phase-b-validation.md)、[阶段 C 验收](docs/phase-c-validation.md) 与 [CHANGELOG](CHANGELOG.md)。
 原始制作指南保留为完整设计参考；其中列出的最终 CLI 和 schema 草稿不等于当前实现。
 
 采用 GPL-3.0-or-later，见 [LICENSE](LICENSE)、[第三方声明](THIRD-PARTY-NOTICES.md)。

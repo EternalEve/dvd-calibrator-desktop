@@ -9,7 +9,7 @@ try
     if (args.Length == 0 || args is ["--help"] or ["help"])
     {
         Console.WriteLine("""
-            DvdCalibrator 0.2.0 — offline geometry and photo rectification
+            DvdCalibrator 0.3.0 — geometry, photo rectification and continuous trace fitting
             demo --out NEW_FOLDER
             inspect --record SNAPSHOT_OR_DISCIMAGE_SIDECAR.json
             import-discimage --record SIDECAR.json --out NEW_FOLDER
@@ -19,8 +19,11 @@ try
             predict --generated SNAPSHOT.json --actual MODEL.json --out NEW_FOLDER
                     [--samples 2049] [--rotation-deg 0]
             rectify --session PHOTO_SESSION_V2.json --out NEW_FOLDER
+            fit-trace --generated SNAPSHOT.json --session PHOTO_SESSION_V2.json --out NEW_FOLDER [--shape-order 0]
+            export-profile --review FIT_REVIEW.json --session PHOTO_SESSION_V2.json --out NEW_FOLDER
+                           --confirm-curve true [--candidate candidate-1]
 
-            Outputs are synthetic predictions, not fitted or physically validated profiles.
+            Profiles contain equivalent compensation; physical validation remains pending.
             Existing output directories are rejected. Exit codes: 0 OK, 2 invalid input,
             3 I/O failure, 130 cancelled. Ctrl+C cancels before publishing the output folder.
             """);
@@ -36,6 +39,8 @@ try
         "freeze-discimage" => ["record", "image", "media", "confirmed-sectors", "generator-version", "generator-commit", "out"],
         "predict" => ["generated", "actual", "out", "samples", "rotation-deg"],
         "rectify" => ["session", "out"],
+        "fit-trace" => ["generated", "session", "out", "shape-order"],
+        "export-profile" => ["review", "session", "out", "candidate", "confirm-curve"],
         _ => throw new ArgumentException($"未知命令：{command}，使用 --help 查看帮助。")
     };
     var options = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -50,6 +55,45 @@ try
 
     switch (command)
     {
+        case "fit-trace":
+        {
+            string path = Require("generated");
+            using var doc = RecordJson.ParseDocument(File.ReadAllText(path));
+            GeometryParameters g; string hash, id;
+            if (doc.RootElement.GetProperty("recordType").GetString() == "generation-snapshot")
+            {
+                var s = RecordJson.Read<GenerationSnapshot>(path); s.Validate(); g = s.Generated; hash = s.ContentSha256; id = s.Id;
+            }
+            else
+            {
+                var s = RecordJson.Read<ExternalGenerationSnapshot>(path); s.Validate(Path.GetDirectoryName(Path.GetFullPath(path))!);
+                g = s.GenerationRecord.Generated; hash = s.ContentSha256; id = s.Id;
+            }
+            var session = RecordJson.Read<PhotoSession>(Require("session"));
+            if (session.SnapshotId != id) throw new ArgumentException("照片会话的快照 ID 不匹配。");
+            var settings = TraceFitSettings.Default with { ShapeOrder = int.Parse(options.GetValueOrDefault("shape-order", "0"), CultureInfo.InvariantCulture) };
+            var result = TraceFitter.Fit(g, hash, session, settings, cancellation.Token);
+            var review = new TraceFitReview(result, result.Candidates.FirstOrDefault(c => c.EligibleForReview)?.Id ?? result.Candidates[0].Id, null);
+            OutputFolder.Publish(Require("out"), folder =>
+            {
+                RecordJson.WriteNew(Path.Combine(folder, "fit-review.json"), review);
+                RecordJson.WriteNew(Path.Combine(folder, "photo-session.json"), session);
+                File.WriteAllText(Path.Combine(folder, "curve.svg"), CalibrationExport.CurveSvg(review, session));
+            }, cancellation.Token);
+            Console.WriteLine($"Trace fit saved: {result.QualityStatus}; candidate confirmation pending.");
+            break;
+        }
+        case "export-profile":
+        {
+            var session = RecordJson.Read<PhotoSession>(Require("session"));
+            var review = RecordJson.Read<TraceFitReview>(Require("review"));
+            if (Require("confirm-curve") != "true") throw new ArgumentException("检查照片完整预测线后，显式传入 --confirm-curve true。");
+            if (options.TryGetValue("candidate", out var id)) review = review.Select(id);
+            review = review.Confirm(review.Result.Generated, session.SnapshotSha256, session);
+            CalibrationExport.Write(Require("out"), review, session, cancellation.Token);
+            Console.WriteLine("Profile, residuals, curve and report exported; physical validation pending.");
+            break;
+        }
         case "rectify":
         {
             var session = RecordJson.Read<PhotoSession>(Require("session"));

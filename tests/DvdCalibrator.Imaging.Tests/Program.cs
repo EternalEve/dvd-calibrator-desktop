@@ -23,6 +23,7 @@ internal static class Program
             catch (Exception e) { Console.WriteLine("FAIL " + name + ": " + e); }
         }
         var demo = SyntheticPhoto.Create();
+        var traceDemo = SyntheticPhoto.CreateTraceDemo();
         Test("corrupt photos are rejected without creating a task", () =>
         {
             try { PhotoCodec.ImportBytes("not an image"u8.ToArray()); throw new Exception("Corrupt photo accepted"); }
@@ -99,14 +100,33 @@ internal static class Program
             File.WriteAllText(Path.Combine(output, "photo-session.json"), JsonSerializer.Serialize(demo.Session, RecordJson.Options));
             File.WriteAllText(Path.Combine(output, "draft-session.json"), JsonSerializer.Serialize(SyntheticPhoto.Create().Session, RecordJson.Options));
         });
-        Test("desktop layout renders offscreen with the source image and workflow controls", () =>
+        Test("trace task fits, confirms, exports and restores with stale-result invalidation", () =>
+        {
+            var review = traceDemo.FitTrace();
+            Check(review.Selected.EligibleForReview, "synthetic trace fit not eligible: " + string.Join(',', review.Selected.RejectionReasons));
+            traceDemo.AttachFit(review.Confirm(traceDemo.Snapshot.Geometry, traceDemo.Snapshot.Hash, traceDemo.Session));
+            string path = Path.Combine(output, "trace-fit.dvdphoto"); traceDemo.SaveNew(path);
+            var loaded = PhotoTask.Load(path);
+            Check(loaded.Fit?.IsConfirmed == true && RecordJson.Hash(loaded.Fit) == RecordJson.Hash(traceDemo.Fit), "fit review not restored");
+            CalibrationExport.Write(Path.Combine(output, "profile"), loaded.Fit!, loaded.Session);
+            loaded.Session = loaded.Session.WithMasks([new([new(10, 10), new(30, 10), new(30, 30)])]);
+            Check(loaded.Fit is null, "editing a mask retained stale fit");
+            Reject(() => loaded.AttachFit(review));
+            loaded = PhotoTask.Load(path);
+            loaded.Session = loaded.Session.WithTraces(loaded.Session.Traces.RemoveAt(0));
+            Check(loaded.Fit is null, "editing a trace retained stale fit");
+            File.WriteAllBytes(Path.Combine(output, "trace-photo.png"), traceDemo.Photo.OrientedPng);
+            File.WriteAllBytes(Path.Combine(output, "fit-input-generation.json"), traceDemo.Snapshot.Files["generation.json"]);
+            File.WriteAllText(Path.Combine(output, "fit-input-session.json"), JsonSerializer.Serialize(traceDemo.Session, RecordJson.Options));
+        });
+        Test("desktop layout renders fit controls and continuous overlay with stable source coordinates", () =>
         {
             // Layout/render test only: no OS window or input automation.
             var app = new DvdCalibrator.App.App(); app.InitializeComponent();
             var window = new DvdCalibrator.App.MainWindow();
             var content = (FrameworkElement)window.Content;
             content.Measure(new Size(1380, 840)); content.Arrange(new Rect(0, 0, 1380, 840)); content.UpdateLayout();
-            window.LoadDemo(); content.Measure(new Size(1380, 840)); content.Arrange(new Rect(0, 0, 1380, 840)); content.UpdateLayout();
+            window.LoadPhotoTask(traceDemo); content.Measure(new Size(1380, 840)); content.Arrange(new Rect(0, 0, 1380, 840)); content.UpdateLayout();
             IEnumerable<DependencyObject> Descendants(DependencyObject parent)
             {
                 for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
@@ -118,6 +138,9 @@ internal static class Program
             var canvas = Descendants(content).OfType<System.Windows.Controls.Canvas>().Single(c => c.Name == "SourcePixelCanvas");
             var slider = Descendants(content).OfType<System.Windows.Controls.Slider>().Single(c => c.Name == "SourceZoom");
             var viewer = Descendants(content).OfType<System.Windows.Controls.ScrollViewer>().Single(c => c.Name == "SourceScroll");
+            var selector = Descendants(content).OfType<System.Windows.Controls.ComboBox>().Single(c => c.Name == "FitCandidateSelector");
+            Check(selector.Items.Count > 0 && selector.SelectedIndex >= 0, "fitted candidate was not displayed");
+            Check(canvas.Children.OfType<System.Windows.Shapes.Polyline>().Any(p => p.Stroke == System.Windows.Media.Brushes.DarkOrange), "continuous prediction missing from source overlay");
             foreach (double zoom in new[] { .5, 2d })
             {
                 slider.Value = zoom; content.UpdateLayout(); viewer.ScrollToHorizontalOffset(37); viewer.ScrollToVerticalOffset(51); content.UpdateLayout();

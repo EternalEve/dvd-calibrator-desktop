@@ -8,5 +8,6 @@ public partial class App : Application
         base.OnStartup(e);
         var window = new MainWindow(); MainWindow = window; window.Show();
         if (e.Args is ["--demo"]) window.LoadDemo();
+        if (e.Args is ["--trace-demo"]) window.LoadTraceDemo();
     }
 }

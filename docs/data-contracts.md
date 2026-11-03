@@ -38,7 +38,7 @@ JSON 使用大小写敏感的 camelCase。构造参数全部必填，包含值�
 阶段 B 新增独立 `photo-session` v2；此 v1 草稿不会自动升级为已矫正任务。
 
 `FitResult` 是阶段 C/D 使用的最小契约，含输入哈希、算法版本、候选、误差与状态。
-阶段 A 不提供拟合器，不生成 `coarse-ready` 或 `fine-ready`；结果契约存在不代表算法已经实现。
+该 v1 草稿不是当前拟合输出；阶段 C 的实际入口使用独立 `trace-fit-result`，也不自动授予 `coarse-ready` 或 `fine-ready`。
 当前实刻状态只允许 `pending`；后续实刻通过必须增加独立验证记录与绑定。
 `forward-prediction` 与 `fit-result` 是不同产物，不得将前向输出当作拟合或配置应用成功。
 
@@ -89,3 +89,14 @@ metadata 记录原始/定向文件哈希、RGB 像素哈希、原始/定向尺�
 改轮廓清除变换/确认，源描点保留。遮罩/描线不参与透视计算，其改动不影响几何确认，但改变完整观测哈希。
 后续拟合应绑定完整观测输入。任务包携带全部照片与生成附件，回读校验哈希，不依赖旧绝对路径。
 操作、大小限制和当前范围见 [照片工作流](photo-workflow.md)。
+
+## 描线拟合与补偿配置
+
+阶段 C 的 `TraceFitReview` 包含 `trace-fit-result` v1、选中候选 ID 和候选确认哈希，结构见
+`trace-fit-review.schema.json`。结果绑定快照哈希、完整照片会话哈希、生成参数与求解设置。
+读回验证固定参数、残差身份/汇总及连续曲线是否与实际候选模型一致，不能给新参数沿用旧叠线。
+照片任务以可选 `fit.json` 保存结果；改变会话清除拟合。旧照片 v2 会话结构不变。
+
+`compensation-profile.schema.json` 对应完整参数主配置；导出时保留全部 double 精度，
+不把界面显示值回写，不把照片整体转角混入生成模型。所有导出保持 `physicalValidation=pending`。
+详情见 [描线拟合](trace-fitting.md)，结构 schema 通过不能代替运行时的输入绑定和语义验证。

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "recordType": "generation-snapshot",
+  "id": "synthetic-photo-demo",
+  "state": "frozen",
+  "disc": {
+    "mediaType": "DVD\u002BR",
+    "diameterMm": 120,
+    "holeDiameterMm": 15,
+    "layers": 1,
+    "mid": null
+  },
+  "generated": {
+    "innerRadiusMm": 24,
+    "outerRadiusMm": 58,
+    "totalSectors": 2295104,
+    "channelBitLengthNm": 133.3,
+    "pitchLinear": 0,
+    "pitchQuadratic": 0,
+    "pitchCubic": 0,
+    "direction": "cw",
+    "directionConvention": "disc-xy-y-up-recording-side",
+    "startLba": 0
+  },
+  "pattern": {
+    "id": "synthetic-cross-demo",
+    "kind": "radial-cross",
+    "lineWidthMm": 1,
+    "mappingVersion": "analytic-disc-xy-v1"
+  },
+  "generator": {
+    "name": "DvdCalibrator",
+    "version": "0.3.0",
+    "sourceKind": "synthetic"
+  },
+  "contentSha256": "dde18ed59e9ff35bddb780b17f10c227b1451bddfa11c0ca304d4ece17aee3f1"
+}

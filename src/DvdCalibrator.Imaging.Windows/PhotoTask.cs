@@ -55,18 +55,25 @@ public sealed class SnapshotBundle
 public sealed class PhotoTask
 {
     public SnapshotBundle Snapshot { get; }
-    public PhotoSession Session { get; set; }
+    private PhotoSession session;
+    public PhotoSession Session
+    {
+        get => session;
+        set { if (Fit is not null && RecordJson.Hash(value) != RecordJson.Hash(session)) Fit = null; session = value; }
+    }
+    public TraceFitReview? Fit { get; private set; }
     public ImportedPhoto Photo { get; }
     public PhotoTask(SnapshotBundle snapshot, ImportedPhoto photo, PhotoSession? session = null)
     {
         Snapshot = snapshot; Photo = photo;
-        Session = session ?? PhotoSession.Create(snapshot.Id, snapshot.Hash, photo.Metadata);
+        this.session = session ?? PhotoSession.Create(snapshot.Id, snapshot.Hash, photo.Metadata);
         Validate();
     }
     public void Validate()
     {
         _ = new SnapshotBundle(Snapshot.Files);
         Session.Validate();
+        Fit?.Validate(Snapshot.Geometry, Snapshot.Hash, Session);
         if (Session.SnapshotId != Snapshot.Id || Session.SnapshotSha256 != Snapshot.Hash
             || Session.Photo != Photo.Metadata || PhotoCodec.Hash(Photo.OriginalBytes) != Session.Photo.OriginalSha256
             || PhotoCodec.Hash(Photo.OrientedPng) != Session.Photo.OrientedFileSha256
@@ -75,11 +82,23 @@ public sealed class PhotoTask
             throw new ArgumentException("照片任务输入身份不一致。");
     }
 
+    public void AttachFit(TraceFitReview review)
+    { review.Validate(Snapshot.Geometry, Snapshot.Hash, Session); Fit = review; }
+    public void ClearFit() => Fit = null;
+    public TraceFitReview FitTrace(TraceFitSettings? settings = null, CancellationToken token = default)
+    {
+        Validate();
+        var result = TraceFitter.Fit(Snapshot.Geometry, Snapshot.Hash, Session, settings, token);
+        return new(result, result.Candidates.FirstOrDefault(c => c.EligibleForReview)?.Id ?? result.Candidates[0].Id, null);
+    }
+
     public void SaveNew(string path)
     {
         Validate();
         byte[] sessionJson = JsonSerializer.SerializeToUtf8Bytes(Session, RecordJson.Options);
         if (sessionJson.Length > RecordJson.MaxBytes) throw new ArgumentException("照片会话记录超过大小限制。");
+        byte[]? fitJson = Fit is null ? null : JsonSerializer.SerializeToUtf8Bytes(Fit, RecordJson.Options);
+        if (fitJson is not null && fitJson.Length > RecordJson.MaxBytes) throw new ArgumentException("拟合记录超过大小限制。");
         string target = Path.GetFullPath(path);
         if (File.Exists(target) || Directory.Exists(target)) throw new IOException("任务包已存在，请使用新文件名保存修订。");
         string parent = Path.GetDirectoryName(target)!; Directory.CreateDirectory(parent);
@@ -92,6 +111,7 @@ public sealed class PhotoTask
                 void Entry(string name, byte[] bytes)
                 { using var entry = archive.CreateEntry(name, CompressionLevel.Fastest).Open(); entry.Write(bytes); }
                 Entry("session.json", sessionJson);
+                if (fitJson is not null) Entry("fit.json", fitJson);
                 foreach (var (name, bytes) in Snapshot.Files) Entry("generation/" + name, bytes);
                 Entry("photo/original", Photo.OriginalBytes); Entry("photo/oriented.png", Photo.OrientedPng);
             }
@@ -127,12 +147,15 @@ public sealed class PhotoTask
                     throw new ArgumentException("不支持的生成附件路径。");
                 files[name] = Read(entry.FullName, name.EndsWith(".json", StringComparison.Ordinal) ? RecordJson.MaxBytes : PhotoCodec.MaxFileBytes);
             }
-            else if (entry.FullName is not ("session.json" or "photo/original" or "photo/oriented.png"))
+            else if (entry.FullName is not ("session.json" or "photo/original" or "photo/oriented.png" or "fit.json"))
                 throw new ArgumentException("任务包含未定义条目。");
         }
         var session = RecordJson.Parse<PhotoSession>(Encoding.UTF8.GetString(Read("session.json", RecordJson.MaxBytes)));
         byte[] original = Read("photo/original", PhotoCodec.MaxFileBytes), png = Read("photo/oriented.png", 130_000_000);
         var photo = new ImportedPhoto(original, png, session.Photo, PhotoCodec.DecodePng(png));
-        return new(new(files), photo, session);
+        var task = new PhotoTask(new(files), photo, session);
+        if (archive.GetEntry("fit.json") is not null)
+            task.AttachFit(RecordJson.Parse<TraceFitReview>(Encoding.UTF8.GetString(Read("fit.json", RecordJson.MaxBytes))));
+        return task;
     }
 }
