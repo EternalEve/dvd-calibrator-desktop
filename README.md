@@ -1,6 +1,6 @@
 # DVD Calibrator Desktop
 
-12 cm 单层 DVD 标定工具。当前版本 **0.8.4：直接显示粗调参数，简化第二张准备流程**。
+12 cm 单层 DVD 标定工具。当前版本 **0.8.9**，支持内置黑白粗调图、自动精调描线和直接复制补偿参数。
 已有照片标注、密环/描线分析、第二张 G1 计划、独立精调、两盘恢复与最终配置追溯，提供自带运行时的 Windows x64 桌面/CLI 包；实盘验收尚未完成。
 
 目标是在人工确认下，以一张粗调盘、一张精调盘为正常路径，获得供
@@ -57,6 +57,7 @@ DiscImageStudio 使用的等效补偿参数。两张盘完成率需要后续实�
 ```
 
 检查包含编译、独立数值对照、照片与任务包检查、离屏 WPF 布局和命令行端到端检查。
+每次运行的输出集中在独立的 `artifacts/regression-*` 目录，可用 `-Out` 指定新目录。
 默认还运行完整模拟矩阵：28 个接受断言、24 个精确拒绝分类断言，另记录 2 个边界探测。
 矩阵是有限软件用例，不给出真实介质成功率。独立运行或快速检查：
 
@@ -66,7 +67,7 @@ DiscImageStudio 使用的等效补偿参数。两张盘完成率需要后续实�
 ./tools/Test.ps1 -SkipSimulationMatrix
 ```
 
-矩阵在新建 `artifacts/simulation-*` 目录输出 HTML/CSV/JSON 及样本任务，见 [模拟矩阵说明与结果](docs/simulation-matrix.md)。
+矩阵输出 HTML/CSV/JSON 及样本任务。独立运行时输出到新建的 `artifacts/simulation-*`，随完整检查运行时输出到本次回归目录的 `simulation/`。见 [模拟矩阵说明与结果](docs/simulation-matrix.md)。
 Math.NET Numerics 5.0.0 的固定 NuGet 包随源码提供；`NuGet.Config` 只使用本地 `third_party/MathNet` 源，正常构建和运行无需联网。
 SDK 自带的运行时和参考包须已安装。`.local/`、`bin/`、`obj/`、`artifacts/` 不进入版本控制。
 

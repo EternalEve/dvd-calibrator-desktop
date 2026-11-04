@@ -6,7 +6,7 @@ internal static class ReferenceTargetChecks
 {
     private static void Check(bool ok, string message) { if (!ok) throw new Exception(message); }
     private static void Reject(Action action) { try { action(); } catch (ArgumentException) { return; } throw new Exception("Invalid target plan accepted."); }
-    public static void Register(Action<string, Action> test, string root)
+    public static void Register(Action<string, Action> test, string root, string output)
     {
         test("exact pinned reference image and actual upstream raster samples including subpixel scale", () =>
         {
@@ -58,7 +58,7 @@ internal static class ReferenceTargetChecks
             var record = DiscImageRecord.Read(Path.Combine(root, "fixtures/upstream-reference-fast-fill.iso.json"));
             var e = evidence with { Parameters = record.Generated, Alternatives = [new("candidate-1", record.Generated)] };
             var plan = FineTargetPlan.Create(new("DVD+R", 120, 15, 1, null), e, 8).Confirm();
-            string output = Path.Combine(root, "artifacts", "reference-contract-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(output);
+            Directory.CreateDirectory(output);
             string png = Path.Combine(output, "target_slim.png"); File.WriteAllBytes(png, ReferenceTarget.PngBytes());
             string frozen = Path.Combine(output, "frozen"); Directory.CreateDirectory(frozen);
             var snapshot = ExternalGenerationSnapshot.CreateInFolder(Path.Combine(root, "fixtures/upstream-reference-fast-fill.iso.json"), png,

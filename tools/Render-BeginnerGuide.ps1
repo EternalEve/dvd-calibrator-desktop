@@ -7,7 +7,7 @@ $materials = (ConvertFrom-Markdown -InputObject (Get-Content -LiteralPath (Join-
 $guide = [regex]::Replace($guide, '(<h[1-6] id=")([^"]+)', '${1}guide-$2')
 $materials = [regex]::Replace($materials, '(<h[1-6] id=")([^"]+)', '${1}materials-$2')
 $guide = [regex]::Replace($guide, '<h2[^>]*>(第\s*([1-8])\s*步[^<]*)</h2>', '<h2 id="step-$2">$1</h2>')
-$materials = $materials.Replace('href="guided-workflow.md#step-1"', 'href="#step-1"')
+$materials = $materials.Replace('href="guided-workflow.md"', 'href="#step-1"')
 $names = @('准备第一张', '校正第一张', '识别黑白盘', '制作精调盘', '提交精调材料', '校正第二张', '计算精调', '使用最终参数')
 $navigation = '<a href="#start">两张盘标定流程</a><a href="#materials">第一张的文件位置</a>'
 for ($i = 0; $i -lt $names.Count; $i++) { $navigation += '<a href="#step-' + ($i + 1) + '">' + ($i + 1) + '. ' + $names[$i] + '</a>' }

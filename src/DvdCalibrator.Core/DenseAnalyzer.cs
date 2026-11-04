@@ -119,7 +119,8 @@ public static class DenseAnalyzer
         return Finish(input, candidates.OrderBy(c => c.TrainingImageError + c.TrainingPhaseRmsRadians).ToImmutableArray());
     }
 
-    internal static Input Extract(IHalfDiscGeneration snapshot, PhotoSession session, RgbImage image, DenseSettings settings, CancellationToken token)
+    internal static (DiscPhotoTransform Transform, double InnerRadius, int Count, double Step, double PixelsPerMm)
+        PrepareSampling(IHalfDiscGeneration snapshot, PhotoSession session, RgbImage image, DenseSettings settings, CancellationToken token)
     {
         snapshot.Validate(); session.Validate(); settings.Validate(); token.ThrowIfCancellationRequested();
         if (snapshot.Pattern.Kind != "half-disc" || session.SnapshotId != snapshot.Id || session.SnapshotSha256 != snapshot.ContentSha256
@@ -140,7 +141,13 @@ public static class DenseAnalyzer
         // At most one radial sample per effective source pixel; oversampling is not extra evidence.
         int count = Math.Min(1024, (int)Math.Floor((hi - lo) * pixelsPerMm) + 1);
         if (count < 64) throw new ArgumentException("原图径向有效分辨率不足 64 像素，请补拍清晰大图。");
-        double step = (hi - lo) / (count - 1); int rays = settings.AngularSamples;
+        return (transform, lo, count, (hi - lo) / (count - 1), pixelsPerMm);
+    }
+
+    internal static Input Extract(IHalfDiscGeneration snapshot, PhotoSession session, RgbImage image, DenseSettings settings, CancellationToken token)
+    {
+        var (transform, lo, count, step, pixelsPerMm) = PrepareSampling(snapshot, session, image, settings, token);
+        int rays = settings.AngularSamples;
         var samples = new double[count, rays, 3];
         var phases = new double?[count]; var channels = new int[count];
         var channelPhases = new double[count, 3]; var amplitudes = new double[count, 3];
@@ -256,7 +263,7 @@ public static class DenseAnalyzer
         if (fragments.Any(f => f.Points.Max(p => p.PhaseRadians) - f.Points.Min(p => p.PhaseRadians) < Math.PI)) warnings.Add("sparse-fragment-use-traces-or-more-visible-rings");
         var observations = new DenseObservations(count, step, pixelsPerMm, fragments.Sum(f => f.Points.Length) / (double)count,
             fragments.ToImmutable(), frequencies.ToImmutable(), warnings.ToImmutable());
-        return new(snapshot, session, settings, observations, samples, PrepareTraces(session));
+        return new(snapshot, session, settings, observations, samples, PrepareTraces(session, transform));
     }
 
     internal static DenseCandidate Score(Input input, string id, GeometryParameters parameters, int polarity, double rotation, CancellationToken token)
@@ -369,10 +376,10 @@ public static class DenseAnalyzer
                 "eight-pixels-per-cycle-is-engineering-screen-not-physical-proof", "next-disc-review-is-not-coarse-ready"]);
     }
 
-    private static ImmutableArray<TraceDatum> PrepareTraces(PhotoSession session)
+    internal static ImmutableArray<TraceDatum> PrepareTraces(PhotoSession session, DiscPhotoTransform transform)
     {
         if (session.Traces.IsEmpty) return [];
-        var transform = session.GetTransform(); var result = ImmutableArray.CreateBuilder<TraceDatum>();
+        var result = ImmutableArray.CreateBuilder<TraceDatum>();
         foreach (var trace in session.Traces)
         {
             if (trace.Id is not ("line-1" or "validation-180") || trace.Points.Length is < 6 or > 600)

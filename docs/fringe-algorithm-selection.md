@@ -20,7 +20,7 @@
 - 两个清楚区域的 WFR 响应幅度中位数约 0.033、0.047；一个弱条纹区域约 0.0017。
 - WFR 与 Gabor 均显示出清楚条纹区域的局部响应。此次单图实验支持继续评估 WFR，尚未证明相位符号、断纹圈数或补偿参数的正确性。
 
-复现实验脚本、下载的原始源码及许可证、结果 JSON、滤波响应和对照图在 artifacts/algorithm-evaluation/。依赖安装在该目录的 python-libs/，未改动全局 Python 环境或生产程序依赖。
+本次试验的本地脚本及依赖清单位于 `artifacts/algorithm-evaluation/`。运行时曾将 Python 依赖安装在该目录的 `python-libs/`，试验输出包括结果 JSON、滤波响应和对照图。
 
 ## 0.8.3 接入结果
 

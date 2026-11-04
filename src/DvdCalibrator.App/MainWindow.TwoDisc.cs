@@ -145,12 +145,6 @@ public sealed partial class MainWindow
         if (ReferenceEquals(task, next)) return;
         bool changed = dirty; Load(next, changed, false); SetStatus(fine ? "当前第二张：使用本张实际生成参数和独立照片校正。" : "当前第一张：修改粗调结果后，第二张需要使用更新后的参数。");
     }
-    private void OpenTwoDisc()
-    {
-        if (calculation is not null) return;
-        var dialog = new OpenFileDialog { Filter = "两盘标定任务|*.dvdcal" }; if (dialog.ShowDialog() != true || !MayReplace()) return;
-        LoadTwoDiscTask(TwoDiscTask.Load(dialog.FileName)); SetStatus("两盘任务已恢复，生成参数、原图、计划、候选和确认均已校验。");
-    }
     private void SaveTwoDisc()
     {
         if (twoDisc is null || calculation is not null) return;

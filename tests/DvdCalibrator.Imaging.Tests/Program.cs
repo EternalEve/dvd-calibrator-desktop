@@ -11,11 +11,13 @@ using System.Windows.Media;
 internal static class Program
 {
     [STAThread]
-    public static int Main()
+    public static int Main(string[] args)
     {
         int passed = 0, total = 0;
         string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-        string output = Path.Combine(root, "artifacts", "photo-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(output);
+        string output = args is ["--out", var outputPath] ? Path.GetFullPath(outputPath)
+            : Path.Combine(root, "artifacts", "photo-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(output);
         void Test(string name, Action action)
         {
             total++;

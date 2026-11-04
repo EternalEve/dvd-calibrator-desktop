@@ -26,7 +26,7 @@ internal static class TraceFitChecks
         }).ToImmutableArray();
         return s.WithTraces([new("line-1", points)]);
     }
-    public static void Register(Action<string, Action> test)
+    public static void Register(Action<string, Action> test, string output)
     {
         test("trace fit recovers radii from independent exact-length reference observations", () =>
         {
@@ -133,8 +133,7 @@ internal static class TraceFitChecks
         {
             var s = Session(Generated, Generated); var result = TraceFitter.Fit(Generated, s.SnapshotSha256, s);
             var review = new TraceFitReview(result, result.Candidates[0].Id, null);
-            string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-            string path = Path.Combine(root, "artifacts", "profile-" + Guid.NewGuid().ToString("N"));
+            string path = Path.Combine(output, "profile");
             Reject(() => CalibrationExport.Write(path, review, s));
             review = review.Confirm(Generated, s.SnapshotSha256, s); CalibrationExport.Write(path, review, s);
             var project = DiscImageStudio.Core.ProjectJsonStore.Load(Path.Combine(path, "candidate.discproj"));
@@ -151,8 +150,7 @@ internal static class TraceFitChecks
             var g = Generated with { ChannelBitLengthNm = 133.33, Direction = SpiralDirection.Ccw };
             var s = Session(g, g); var result = TraceFitter.Fit(g, s.SnapshotSha256, s);
             var review = new TraceFitReview(result, result.Candidates[0].Id, null).Confirm(g, s.SnapshotSha256, s);
-            string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-            string path = Path.Combine(root, "artifacts", "incompatible-profile-" + Guid.NewGuid().ToString("N"));
+            string path = Path.Combine(output, "incompatible-profile");
             CalibrationExport.Write(path, review, s);
             Check(!File.Exists(Path.Combine(path, "candidate.discproj")), "inexpressible parameters were exported as a project");
             var profile = RecordJson.Read<CompensationProfile>(Path.Combine(path, "calibration-profile.json"));

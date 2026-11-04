@@ -14,7 +14,7 @@ public sealed partial class MainWindow
         catch (System.ComponentModel.Win32Exception e) { throw new IOException("无法打开浏览器。请在程序目录中手动打开“新手教程.html”。", e); }
     }
 
-    private const string FineDiscGenerationSteps = "② “标定”页面，找到“生成标定盘”页面，确认显示的内外半径正确，选择位置并点击“生成镜像/音轨”。\n③ 拍摄第二张记录面。回到本工具，下一步提交 ISO 同目录、同名的 .calibration.json（位于②选择的位置）和照片。";
+    private const string FineDiscGenerationSteps = "② 在“标定”页找到“生成标定盘”，核对内外半径，选择位置并点击“生成镜像/音轨”。\n③ 用刻录软件将 ISO 写入第二张空白盘，再拍摄记录面。\n④ 回本工具下一页，提交 ISO 同目录、同名的 .calibration.json 和照片。";
 
     private sealed record StepTutorial(string Purpose, string Outcome, string Location, string Actions, string Guide);
     private static StepTutorial Tutorial(CalibrationStep step, bool dense = false) => step switch
@@ -44,7 +44,7 @@ public sealed partial class MainWindow
             "用本页参数刻录的辅助标定盘，以及它的记录和照片。",
             "本页查看参数；去 DiscImageStudio 生成镜像，再用刻录软件写盘。",
             "① 将本页参数填入 DiscImageStudio 的“工程设置”。\n" + FineDiscGenerationSteps,
-            "点“复制参数”可复制整组数值。已有参数时，可点“编辑 / 使用已有参数”，粘贴、打开参数文件或选用预设。\n在“生成标定盘”核对内外半径后生成镜像，再用刻录软件写入第二张空白盘。拍摄完整记录面，保留外缘、中心孔和清晰十字线。\n可展开“预计图案与拍摄清晰度”查看预测。预计像素/mm 默认 8；若提示线太细，需改善拍摄安排。右上角“保存进度”可保存当前任务。"),
+            "点“复制参数”可复制整组数值。已有参数时，可点“编辑 / 使用已有参数”，粘贴、打开参数文件或选用预设。\n拍摄完整记录面，保留外缘、中心孔和清晰十字线。可展开“预计图案与拍摄清晰度”查看预测，预计像素/mm 默认 8。右上角“保存进度”可保存当前任务。"),
         CalibrationStep.FineImport => new(
             "把刚刚制作的第二张记录和照片交回工具，核对有没有用错参数。",
             "与第 4 步计划匹配的第二张照片。",

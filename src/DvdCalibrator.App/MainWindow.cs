@@ -163,13 +163,6 @@ public sealed partial class MainWindow : Window
         CurrentStep = CalibrationStep.Prepare; photoImage.Source = null; canvas.Width = canvas.Height = 0;
         ClearPreviews(); Draw(); Refresh();
     }
-    private void OpenTask()
-    {
-        if (calculation is not null) return;
-        var dialog = new OpenFileDialog { Filter = "照片任务包|*.dvdphoto" };
-        if (dialog.ShowDialog() != true || !MayReplace()) return;
-        Load(PhotoTask.Load(dialog.FileName), false);
-    }
     public void LoadDemo()
     {
         if (calculation is not null || !MayReplace()) return;

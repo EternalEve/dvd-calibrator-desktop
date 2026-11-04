@@ -1,6 +1,6 @@
 # 第一张盘的文件位置
 
-从零开始时，先按[第 1 步：准备第一张标定盘](guided-workflow.md#step-1)保存黑白图，再到 DiscImageStudio 生成 `first.iso` 并刻录。
+从零开始时，先按[第 1 步：准备第一张标定盘](guided-workflow.md)保存黑白图，再到 DiscImageStudio 生成 `first.iso` 并刻录。
 
 ## 生成记录在哪里
 

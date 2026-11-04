@@ -35,6 +35,10 @@ if (args is ["--write-schemas"])
     return 0;
 }
 
+string output = args is ["--out", var outputPath] ? Path.GetFullPath(outputPath)
+    : Path.Combine(root, "artifacts", "core-" + Guid.NewGuid().ToString("N"));
+Directory.CreateDirectory(output);
+
 var nominal = new GeometryParameters(24, 58, 2_295_104, 133.3, 0, 0, 0,
     SpiralDirection.Cw, GeometryParameters.Convention, 0);
 var snapshot = GenerationSnapshot.CreateSynthetic("test-g0", new("DVD+R", 120, 15, 1, null), nominal,
@@ -221,8 +225,7 @@ Test("undersampled predictions disclose alias risk and preserve raw phase", () =
 });
 Test("identity pattern raster preserves upper/lower half and disc mask", () =>
 {
-    string folder = Path.Combine(root, "artifacts"); Directory.CreateDirectory(folder);
-    string path = Path.Combine(folder, "raster-" + Guid.NewGuid().ToString("N") + ".pgm");
+    string path = Path.Combine(output, "raster.pgm");
     PatternRaster.WritePgm(path, snapshot, nominal, 0, 32);
     byte[] bytes = File.ReadAllBytes(path);
     string prefix = System.Text.Encoding.ASCII.GetString(bytes.AsSpan(0, Math.Min(160, bytes.Length)));
@@ -236,7 +239,7 @@ Test("identity pattern raster preserves upper/lower half and disc mask", () =>
 });
 Test("atomic outputs refuse overwrite, clean failure and cancellation", () =>
 {
-    string folder = Path.Combine(root, "artifacts", "test-" + Guid.NewGuid().ToString("N"));
+    string folder = Path.Combine(output, "atomic-output");
     OutputFolder.Publish(folder, dir => RecordJson.WriteNew(Path.Combine(dir, "snapshot.json"), snapshot));
     string hash = RecordJson.FileHash(Path.Combine(folder, "snapshot.json"));
     Reject(() => OutputFolder.Publish(folder, _ => throw new Exception("must not execute")));
@@ -259,7 +262,7 @@ Test("actual upstream fast-fill fixture and incomplete-evidence diagnostics", ()
     {
         var node = JsonNode.Parse(File.ReadAllText(path))!.AsObject();
         node["imageMapping"]!.AsObject().Remove(field);
-        string temp = Path.Combine(root, "artifacts", "bad-record-" + Guid.NewGuid().ToString("N") + ".json");
+        string temp = Path.Combine(output, "missing-" + field + ".json");
         File.WriteAllText(temp, node.ToJsonString());
         try { DiscImageRecord.Read(temp); throw new Exception($"Missing field {field} accepted"); }
         catch (KeyNotFoundException) { }
@@ -267,7 +270,7 @@ Test("actual upstream fast-fill fixture and incomplete-evidence diagnostics", ()
     void Bad(Action<JsonObject> edit)
     {
         var node = JsonNode.Parse(File.ReadAllText(path))!.AsObject(); edit(node);
-        string temp = Path.Combine(root, "artifacts", "bad-record-" + Guid.NewGuid().ToString("N") + ".json");
+        string temp = Path.Combine(output, "bad-record-" + Guid.NewGuid().ToString("N") + ".json");
         File.WriteAllText(temp, node.ToJsonString());
         Reject(() => DiscImageRecord.Read(temp));
     }
@@ -283,7 +286,7 @@ Test("external snapshot freezes copied source bytes and survives relocation", ()
 {
     var declaration = new GenerationDeclarations(new("DVD-R", 120, 15, 1, null), 16, "1.3.6",
         DiscImageRecord.UpstreamCommit, "user-declared");
-    string folder = Path.Combine(root, "artifacts", "external-" + Guid.NewGuid().ToString("N"));
+    string folder = Path.Combine(output, "external");
     OutputFolder.Publish(folder, dir =>
     {
         var external = ExternalGenerationSnapshot.CreateInFolder(Path.Combine(root, "fixtures/upstream-fast-fill.iso.json"),
@@ -300,10 +303,10 @@ Test("external snapshot freezes copied source bytes and survives relocation", ()
 });
 
 PhotoChecks.Register(Test);
-TraceFitChecks.Register(Test);
+TraceFitChecks.Register(Test, output);
 DenseChecks.Run(Test);
-ReferenceTargetChecks.Register(Test, root);
+ReferenceTargetChecks.Register(Test, root, Path.Combine(output, "reference-contract"));
 GuidanceChecks.Register(Test);
 Console.WriteLine($"Independent oracle max angle error: {worstAngle:G6} rad; max inverse radius error: {worstRadius:G6} mm.");
-Console.WriteLine($"{count - failures}/{count} checks passed.");
+Console.WriteLine($"{count - failures}/{count} checks passed. Artifacts: {output}");
 return failures == 0 ? 0 : 1;

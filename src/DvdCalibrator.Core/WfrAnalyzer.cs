@@ -141,17 +141,17 @@ public static class WfrAnalyzer
         lock (cache)
         {
             if (cache.Key == key && cache.Value is not null) return cache.Value;
-            var legacy = DenseAnalyzer.Extract(snapshot, session, image, DenseSettings.Default, token);
-            int rows = legacy.Observations.RadialSamples, split = rows * 3 / 4; const int rays = 128, columns = rays / 2;
-            double lo = snapshot.Generated.InnerRadiusMm + .5, step = legacy.Observations.RadialStepMm;
+            var (transform, lo, rows, step, pixelsPerMm) = DenseAnalyzer.PrepareSampling(snapshot, session, image, DenseSettings.Default, token);
+            var traces = DenseAnalyzer.PrepareTraces(session, transform);
+            int split = rows * 3 / 4; const int rays = 128, columns = rays / 2;
             // Each independently filtered radial section needs both edge guards and interior evidence.
             if (rows < 232)
             {
                 cache.Key = key;
                 return cache.Value = new(new(0, rays, .01, [], []),
-                    new(rows, step, legacy.Observations.SourcePixelsPerMm, 0, [], [], ["insufficient-independent-radial-samples"]), legacy.Traces);
+                    new(rows, step, pixelsPerMm, 0, [], [], ["insufficient-independent-radial-samples"]), traces);
             }
-            var h = session.GetTransform(); var frequencies = Enumerable.Range(4, 29).Select(i => i / 256d).ToArray();
+            var frequencies = Enumerable.Range(4, 29).Select(i => i / 256d).ToArray();
             var points = ImmutableArray.CreateBuilder<WfrPoint>(); int channel = 0; double best = -1;
             double[] Sample(int c, int first, int count, int parity)
             {
@@ -159,7 +159,7 @@ public static class WfrAnalyzer
                 for (int i = 0; i < count; i++) for (int j = 0; j < columns; j++)
                 {
                     double a = Tau * (2 * j + parity) / rays, r = lo + (first + i) * step;
-                    var p = h.DiscToSource(new(r * Math.Cos(a), r * Math.Sin(a)));
+                    var p = transform.DiscToSource(new(r * Math.Cos(a), r * Math.Sin(a)));
                     var rgb = PhotoRaster.IsMasked(p.X, p.Y, session.Masks) ? null : image.Sample(p.X, p.Y);
                     double v = rgb is null ? double.NaN : c == 0 ? rgb.Value.R : c == 1 ? rgb.Value.G : rgb.Value.B;
                     data[i * columns + j] = v is <= 3 or >= 252 ? double.NaN : v;
@@ -198,11 +198,11 @@ public static class WfrAnalyzer
             var spectral = points.GroupBy(p => p.Row).Select(q => new LocalFrequency(q.First().RadiusMm, q.Average(p => p.FrequencyCyclesPerPixel) / step,
                 q.Average(p => p.FrequencyCyclesPerPixel) / step, q.Average(p => p.Coherence), 1 / q.Average(p => p.FrequencyCyclesPerPixel))).ToImmutableArray();
             double fraction = points.Select(p => p.Row).Distinct().Count() * 4d / rows;
-            double limit = Math.Clamp(2.5 * Math.Max(session.Rectification!.OuterRmsPixels, session.Rectification.HoleRmsPixels) / legacy.Observations.SourcePixelsPerMm, .01, .35);
+            double limit = Math.Clamp(2.5 * Math.Max(session.Rectification!.OuterRmsPixels, session.Rectification.HoleRmsPixels) / pixelsPerMm, .01, .35);
             var evidence = new WfrEvidence(channel, rays, limit, points.ToImmutable(), []);
-            var observation = new DenseObservations(rows, step, legacy.Observations.SourcePixelsPerMm, Math.Min(1, fraction), fragments, spectral,
+            var observation = new DenseObservations(rows, step, pixelsPerMm, Math.Min(1, fraction), fragments, spectral,
                 ["local-wfr-training-and-validation-filtered-separately", "photo-center-offset-fitted-within-contour-error"]);
-            cache.Key = key; return cache.Value = new(evidence, observation, legacy.Traces);
+            cache.Key = key; return cache.Value = new(evidence, observation, traces);
         }
     }
 

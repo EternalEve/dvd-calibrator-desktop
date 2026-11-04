@@ -62,8 +62,6 @@ try {
         Copy-Item -LiteralPath (Join-Path $projectRoot "third_party/$dependency/$licenseName") -Destination $licenseFolder
     }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/portable-quickstart.md') -Destination (Join-Path $payload '使用说明.md')
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/guided-workflow.md') -Destination (Join-Path $app '分步教程.md')
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/material-preparation.md') -Destination (Join-Path $app '生成记录说明.md')
     foreach ($pack in @('microsoft.netcore.app.runtime.win-x64', 'microsoft.windowsdesktop.app.runtime.win-x64')) {
         $packRoot = Join-Path $packages "$pack/$runtimeVersion"
         $legal = @(Get-ChildItem -LiteralPath $packRoot -Recurse -File | Where-Object Name -Match '^(LICENSE|THIRD.PARTY.NOTICES|ThirdPartyNotices)(\..*)?$')
