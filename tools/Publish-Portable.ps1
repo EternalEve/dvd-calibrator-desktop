@@ -21,14 +21,27 @@ try {
     $env:DOTNET_CLI_HOME = Join-Path $projectRoot '.local/dotnet'
     $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
     $env:MSBuildEnableWorkloadResolver = 'false'
+    $restoreArgs = @()
+    if ($RuntimeSource) {
+        # Avoid passing mixed local and HTTPS sources as a single MSBuild property on Windows.
+        $config = [xml](Get-Content -LiteralPath (Join-Path $projectRoot 'NuGet.Config') -Raw)
+        $config.SelectSingleNode('/configuration/packageSources/add[@key="bundled"]').SetAttribute('value', (Join-Path $projectRoot 'third_party/MathNet'))
+        $runtimeFeed = $config.CreateElement('add')
+        $runtimeFeed.SetAttribute('key', 'runtime')
+        $source = if ($RuntimeSource -match '^(https?|file)://') { $RuntimeSource } else { [IO.Path]::GetFullPath($RuntimeSource, $projectRoot) }
+        $runtimeFeed.SetAttribute('value', $source)
+        $null = $config.configuration.packageSources.AppendChild($runtimeFeed)
+        $restoreConfig = Join-Path $work 'NuGet.Config'
+        $config.Save($restoreConfig)
+        $restoreArgs = @("-p:RestoreConfigFile=$restoreConfig")
+    }
     foreach ($project in @('App', 'Cli')) {
         $publish = Join-Path $work $project
         $publishArgs = @('publish', "src/DvdCalibrator.$project", '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true',
             "-p:RuntimeFrameworkVersion=$runtimeVersion", "-p:RestorePackagesPath=$packages",
             '-p:NuGetAudit=false', '-p:PublishTrimmed=false', '-p:PublishSingleFile=false', '-o', $publish, '--nologo')
-        if ($RuntimeSource) { $publishArgs += @('--source', (Join-Path $projectRoot 'third_party/MathNet'), '--source', $RuntimeSource) }
-        & dotnet @publishArgs
-        if ($LASTEXITCODE -ne 0) { throw "$project publish failed. Runtime packs may need an explicit -RuntimeSource on first use." }
+        & dotnet @publishArgs @restoreArgs
+        if ($LASTEXITCODE -ne 0) { throw "$project dotnet publish failed (exit $LASTEXITCODE). See the build output above." }
         foreach ($file in Get-ChildItem -LiteralPath $publish -Recurse -File) {
             $relative = [IO.Path]::GetRelativePath($publish, $file.FullName)
             $destination = Join-Path $app $relative
