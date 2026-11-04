@@ -1,6 +1,6 @@
 # Windows 便携版
 
-完整解压 ZIP，双击 `DvdCalibrator.App.exe`。程序自带运行时，适用于 Windows x64。
+完整解压 ZIP，双击 `启动 DVD Calibrator.cmd`。程序和运行时都在 `app` 文件夹，适用于 Windows x64。搬移便携版时请移动整个解压目录。
 
 ## 操作顺序
 
@@ -11,15 +11,15 @@
 5. **提交第二张：** 第 5 页点“导入第二张照片”，先选第二张 ISO 同目录的 `.calibration.json`，再选实拍照片。
 6. **精调并应用：** 第 6 页确认照片矫正。第 7 页点“自动描线并拟合”，检查描点和曲线后确认。第 8 页自动校验，随后复制补偿参数。在 DiscImageStudio 的“工程设置”填入参数，再到“设计”页添加正式图片。
 
-完整操作和文件位置见同目录的 [新手教程.html](新手教程.html)。右上角“保存进度”保存任务包，下次用“打开任务”继续。
+完整操作和文件位置见 [新手教程.html](app/新手教程.html)。右上角“保存进度”保存任务包，下次用“打开任务”继续。
 
 手上已有参数时，在第 1 页点“使用已有参数”，应用后从第 4 页制作辅助标定盘，第 8 页查看单盘精调参数。左侧各步骤可直接打开。
 
 ## 随包文件
 
-- `新手教程.html`：可离线阅读的完整操作说明。
-- `source.zip`：与程序对应的源码。
-- `package-manifest.json`：文件清单与校验值。
-- `LICENSE`、`THIRD-PARTY-NOTICES.md`、`licenses/`：许可证。
+- `app/新手教程.html`：可离线阅读的完整操作说明。
+- `app/source.zip`：与程序对应的源码。
+- `app/package-manifest.json`：文件清单与校验值。
+- `app/` 内的 `LICENSE`、`THIRD-PARTY-NOTICES.md` 和 `licenses/`：许可证。
 
-命令行工具为 `DvdCalibrator.Cli.exe`，运行 `--help` 查看命令。
+命令行工具为 `app/DvdCalibrator.Cli.exe`，运行 `--help` 查看命令。

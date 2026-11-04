@@ -10,7 +10,11 @@ $Out = [IO.Path]::GetFullPath($Out)
 if (Test-Path -LiteralPath $Out) { throw 'Output exists; select a new directory.' }
 $work = Join-Path $projectRoot ('.local/portable-' + [guid]::NewGuid().ToString('N'))
 $payload = Join-Path $work $name
-$null = New-Item -ItemType Directory -Path $payload
+$app = Join-Path $payload 'app'
+$null = New-Item -ItemType Directory -Path $app
+$launcher = '启动 DVD Calibrator.cmd'
+$desktopExecutable = 'app/DvdCalibrator.App.exe'
+$cliExecutable = 'app/DvdCalibrator.Cli.exe'
 $packages = Join-Path $projectRoot '.local/nuget'
 Push-Location $projectRoot
 try {
@@ -27,7 +31,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "$project publish failed. Runtime packs may need an explicit -RuntimeSource on first use." }
         foreach ($file in Get-ChildItem -LiteralPath $publish -Recurse -File) {
             $relative = [IO.Path]::GetRelativePath($publish, $file.FullName)
-            $destination = Join-Path $payload $relative
+            $destination = Join-Path $app $relative
             if (Test-Path -LiteralPath $destination) {
                 if ((Get-FileHash -LiteralPath $destination).Hash -ne (Get-FileHash -LiteralPath $file.FullName).Hash) {
                     # WPF replaces the Core runtime's WindowsBase facade with its implementation.
@@ -44,31 +48,33 @@ try {
         }
     }
     foreach ($required in @('DvdCalibrator.App.exe', 'DvdCalibrator.Cli.exe', 'MathNet.Numerics.dll', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll', 'PresentationFramework.Fluent.dll', 'wpfgfx_cor3.dll', '新手教程.html', '标定原图/target_slim.png')) {
-        if (-not (Test-Path -LiteralPath (Join-Path $payload $required))) { throw "Missing payload file: $required" }
+        if (-not (Test-Path -LiteralPath (Join-Path $app $required))) { throw "Missing payload file: $required" }
     }
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $payload 'LICENSE')
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'THIRD-PARTY-NOTICES.md') -Destination $payload
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination $payload
+    ('@start "" "%~dp0{0}" %*' -f $desktopExecutable.Replace('/', '\')) |
+        Set-Content -LiteralPath (Join-Path $payload $launcher) -Encoding ascii
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination $app
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'THIRD-PARTY-NOTICES.md') -Destination $app
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination $app
     foreach ($dependency in @('MathNet', 'pyGPA')) {
-        $licenseFolder = Join-Path $payload "licenses/$dependency"
+        $licenseFolder = Join-Path $app "licenses/$dependency"
         $null = New-Item -ItemType Directory -Path $licenseFolder -Force
         $licenseName = if ($dependency -eq 'MathNet') { 'LICENSE.md' } else { 'LICENSE' }
         Copy-Item -LiteralPath (Join-Path $projectRoot "third_party/$dependency/$licenseName") -Destination $licenseFolder
     }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/portable-quickstart.md') -Destination (Join-Path $payload '使用说明.md')
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/guided-workflow.md') -Destination (Join-Path $payload '分步教程.md')
-    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/material-preparation.md') -Destination (Join-Path $payload '生成记录说明.md')
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/guided-workflow.md') -Destination (Join-Path $app '分步教程.md')
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/material-preparation.md') -Destination (Join-Path $app '生成记录说明.md')
     foreach ($pack in @('microsoft.netcore.app.runtime.win-x64', 'microsoft.windowsdesktop.app.runtime.win-x64')) {
         $packRoot = Join-Path $packages "$pack/$runtimeVersion"
         $legal = @(Get-ChildItem -LiteralPath $packRoot -Recurse -File | Where-Object Name -Match '^(LICENSE|THIRD.PARTY.NOTICES|ThirdPartyNotices)(\..*)?$')
         if ($legal.Count -eq 0) { throw "Runtime license missing: $pack" }
         foreach ($file in $legal) {
-            $destination = Join-Path $payload ("licenses/dotnet/$pack/" + [IO.Path]::GetRelativePath($packRoot, $file.FullName))
+            $destination = Join-Path $app ("licenses/dotnet/$pack/" + [IO.Path]::GetRelativePath($packRoot, $file.FullName))
             $null = New-Item -ItemType Directory -Force -Path (Split-Path $destination -Parent)
             Copy-Item -LiteralPath $file.FullName -Destination $destination
         }
     }
-    $samples = Join-Path $payload 'samples'; $null = New-Item -ItemType Directory -Path $samples
+    $samples = Join-Path $app 'samples'; $null = New-Item -ItemType Directory -Path $samples
     Copy-Item -LiteralPath (Join-Path $projectRoot 'fixtures/trace-fit-generation.synthetic.json') -Destination (Join-Path $samples 'trace-generation.json')
     Copy-Item -LiteralPath (Join-Path $projectRoot 'fixtures/trace-fit-session.synthetic.json') -Destination (Join-Path $samples 'trace-session.json')
     # Include the complete current source, including uncommitted edits, rather than a stale HEAD archive.
@@ -94,17 +100,17 @@ try {
     }
     [ordered]@{ schemaVersion = 1; commit = "$commit"; files = $sourceFiles } | ConvertTo-Json -Depth 4 |
         Set-Content -LiteralPath (Join-Path $source 'source-files.json') -Encoding utf8NoBOM
-    [IO.Compression.ZipFile]::CreateFromDirectory($source, (Join-Path $payload 'source.zip'), [IO.Compression.CompressionLevel]::Optimal, $false)
+    [IO.Compression.ZipFile]::CreateFromDirectory($source, (Join-Path $app 'source.zip'), [IO.Compression.CompressionLevel]::Optimal, $false)
     $files = @(Get-ChildItem -LiteralPath $payload -File -Recurse | Sort-Object FullName | ForEach-Object {
         [ordered]@{ path = [IO.Path]::GetRelativePath($payload, $_.FullName).Replace('\', '/'); bytes = $_.Length; sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
     })
     $manifest = [ordered]@{
         schemaVersion = 1; recordType = 'portable-package'; version = "$version"; runtimeIdentifier = 'win-x64'; selfContained = $true
-        runtimeVersion = $runtimeVersion; desktopExecutable = 'DvdCalibrator.App.exe'; cliExecutable = 'DvdCalibrator.Cli.exe'
-        source = [ordered]@{ commit = "$commit"; workingTreeChanges = $dirtySource; archive = 'source.zip' }
+        runtimeVersion = $runtimeVersion; desktopLauncher = $launcher; desktopExecutable = $desktopExecutable; cliExecutable = $cliExecutable
+        source = [ordered]@{ commit = "$commit"; workingTreeChanges = $dirtySource; archive = 'app/source.zip' }
         nativeInteraction = 'pending'; physicalValidation = 'pending'; files = $files
     }
-    $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $payload 'package-manifest.json') -Encoding utf8NoBOM
+    $manifest | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $app 'package-manifest.json') -Encoding utf8NoBOM
     $null = New-Item -ItemType Directory -Path $Out
     $archive = Join-Path $Out ($name + '.zip')
     [IO.Compression.ZipFile]::CreateFromDirectory($payload, $archive, [IO.Compression.CompressionLevel]::Optimal, $true)

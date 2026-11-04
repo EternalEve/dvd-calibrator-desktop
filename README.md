@@ -40,7 +40,7 @@ DiscImageStudio 使用的等效补偿参数。两张盘完成率需要后续实�
 
 ## 构建和检查
 
-便携包完整解压后双击 `DvdCalibrator.App.exe`，不需要 SDK。使用方式见 [便携版说明](docs/portable-quickstart.md)。
+便携包完整解压后双击 `启动 DVD Calibrator.cmd`。运行时随程序放在 `app` 子目录。使用方式见 [便携版说明](docs/portable-quickstart.md)。
 打包工具需要 PowerShell 7、上述 SDK 与平台运行时包。首次打包显式下载官方运行时包，之后可省略源参数离线复用缓存：
 
 ```powershell
