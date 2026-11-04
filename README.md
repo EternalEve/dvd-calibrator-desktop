@@ -49,9 +49,9 @@ dotnet run --project src/DvdCalibrator.App -c Release
 ## 实机测试
 
 ![粗调盘](docs/example1step1.jpg)
-![粗调盘分析结果](docs/example1step1analyze.jpg)
+![粗调盘分析结果](docs/example1step1analyze.png)
 ![精调盘](docs/example1step2.jpg)
-![精调盘分析结果](docs/example1step2analyze.jpg)
+![精调盘分析结果](docs/example1step2analyze.png)
 ![最终成品测试](docs/example1final.jpg)
 
 ## 许可证
