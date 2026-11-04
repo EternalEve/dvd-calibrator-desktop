@@ -23,8 +23,28 @@ public static class FineTargetExport
                 "--spiral-direction", p.Direction == SpiralDirection.Cw ? "cw" : "ccw", "--lba", "0", "--psn-offset", "0x30000", "--start-angle-deg", "0", "--image-threshold", "128", "--alpha-threshold", "128", "--constraint-step", "1",
                 "--algorithm", "dispersion", "--fast-output", "true", "--fast-parallelism", "1"];
             RecordJson.WriteNew(Path.Combine(folder, "generator-arguments.json"), arguments);
-            File.WriteAllText(Path.Combine(folder, "report.html"), $"<!doctype html><html lang=\"zh-CN\"><meta charset=\"utf-8\"><title>第二张生成计划</title><style>body{{font:16px system-ui;max-width:1000px;margin:40px auto}}pre{{white-space:pre-wrap}}img{{max-width:700px}}</style><h1>第二张生成计划</h1><p>已确认软件计划；实际生成记录及实刻验证仍待提供。本目录不会自动生成 ISO。</p><p>使用固定 DiscImageStudio 1.3.6 / {plan.Target.UpstreamCommit}。原图哈希 {plan.Target.PngSha256}，禁止重采样、换图、移动或旋转图层。结构化命令参数见 generator-arguments.json，以本目录为工作目录执行生成器。</p><p>预计精调照片 {N(plan.ExpectedPhotoPixelsPerMm)} 像素/mm，是计划输入。预测最小臂间距 {N(plan.Forecast.MinimumArmSpacingPixels)} 像素，最小线宽 {N(plan.Forecast.MinimumLineWidthPixels)} 像素，候选差 {N(plan.Forecast.MaximumCandidateDifferenceMm)} mm；这些是工程筛查，不是实刻通过结论。</p><pre>{WebUtility.HtmlEncode(System.Text.Json.JsonSerializer.Serialize(plan.Generated, RecordJson.Options))}</pre><img src=\"next-disc.svg\" alt=\"完整候选精调中心线预测\"><p>圆环按源图像素半径 490–1130 随 G1 外半径缩放；当前描线拟合仅使用已确认的十字中心线，不把圆环当角度约束。生成后冻结实际旁车与这份原图，再导入第二张照片。回读将逐项核对 G1、图片哈希、版本声明、起始角、阈值和采样设置。</p></html>");
+            File.WriteAllText(Path.Combine(folder, "粗调参数.txt"), $"在 DiscImageStudio 的 DVD 参数设置中逐项填写，再到辅助标定页从当前参数创建标靶。\n内半径 (mm): {N(p.InnerRadiusMm)}\n外半径 (mm): {N(p.OuterRadiusMm)}\n扇区数: {p.TotalSectors}\n一阶轨距: {N(p.PitchLinear)}\n二阶轨距: {N(p.PitchQuadratic)}\n三阶轨距: {N(p.PitchCubic)}\n位长 (nm): {N(p.ChannelBitLengthNm)}\n方向: {p.Direction}\n辅助标定页支持顺时针及 133.3 nm；其他设置请使用完整参数生成路径。\n生成并刻录后，回本工具提交输出 ISO 同目录、同名的 .calibration.json 和记录面照片。\n");
+            File.WriteAllText(Path.Combine(folder, "report.html"), Report(plan));
         }, token);
+    }
+
+    private static string Report(FineTargetPlan plan)
+    {
+        string N(double value) => value.ToString("G17", CultureInfo.InvariantCulture);
+        return $$"""
+            <!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>制作精调盘</title>
+            <style>body{font:16px/1.8 system-ui;max-width:900px;margin:40px auto;padding:20px}pre{white-space:pre-wrap}img{max-width:100%}</style>
+            <h1>用粗调结果制作第二张辅助标定盘</h1>
+            <p>打开本目录的“粗调参数.txt”，在 DiscImageStudio 的 DVD 参数设置中填入内外半径、扇区数和三项轨距系数。
+            进入辅助标定页，从当前参数创建标靶，选择 ISO 输出位置并生成，再刻录第二张同类型空白盘。</p>
+            <p>辅助标定入口使用顺时针、133.3 nm 位长。当前方案：{{plan.Generated.Direction}} / {{N(plan.Generated.ChannelBitLengthNm)}} nm。
+            若不匹配，需用支持完整参数的生成入口及 generator-arguments.json，不能静默套用默认值。</p>
+            <p>第二张生成后，到所选 ISO 的输出目录寻找同名 <code>.calibration.json</code>，
+            在本工具第 5 步点击“导入第二张照片”提交该记录，再选这张盘的记录面原始照片。无需命令行整理记录。
+            schema 6 辅助标定记录已经确定源图，无需另交 PNG。</p>
+            <p>target_slim.png 是精调原图；next-disc.svg 是预测，不能当作刻录源图。若使用普通图片生成入口，提交其 .iso.json 和实际源图。</p>
+            <img src="next-disc.svg" alt="第二张预测"><p>计划已确认；生成、刻录和拍摄由用户完成。</p>
+            """;
     }
 
     public static string ForecastSvg(FineTargetPlan plan)

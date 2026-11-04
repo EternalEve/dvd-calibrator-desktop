@@ -509,6 +509,116 @@
           "null"
         ]
       }
+    },
+    "wfr": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "channel": {
+          "type": "integer"
+        },
+        "angularSamples": {
+          "type": "integer"
+        },
+        "centerShiftLimitMm": {
+          "type": "number"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "row": {
+                "type": "integer"
+              },
+              "ray": {
+                "type": "integer"
+              },
+              "radiusMm": {
+                "type": "number"
+              },
+              "angleRadians": {
+                "type": "number"
+              },
+              "phaseRadians": {
+                "type": "number"
+              },
+              "unwrappedPhaseRadians": {
+                "type": "number"
+              },
+              "frequencyCyclesPerPixel": {
+                "type": "number"
+              },
+              "amplitude": {
+                "type": "number"
+              },
+              "coherence": {
+                "type": "number"
+              },
+              "isHoldout": {
+                "type": "boolean"
+              },
+              "isRadialHoldout": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "row",
+              "ray",
+              "radiusMm",
+              "angleRadians",
+              "phaseRadians",
+              "unwrappedPhaseRadians",
+              "frequencyCyclesPerPixel",
+              "amplitude",
+              "coherence",
+              "isHoldout",
+              "isRadialHoldout"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "centers": {
+          "type": "array",
+          "items": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "candidateId": {
+                "type": "string"
+              },
+              "xMm": {
+                "type": "number"
+              },
+              "yMm": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "candidateId",
+              "xMm",
+              "yMm"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "channel",
+        "angularSamples",
+        "centerShiftLimitMm",
+        "points",
+        "centers"
+      ],
+      "additionalProperties": false,
+      "default": null
     }
   },
   "required": [

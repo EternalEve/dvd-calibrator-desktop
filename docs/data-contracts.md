@@ -79,6 +79,8 @@ dotnet run --project src/DvdCalibrator.Cli -c Release -- inspect --record artifa
 冻结说明生成条件已记录，不等同于身份独立认证、图像已经识别或实刻结果通过。
 外部快照可用 `inspect` 验证，也能作为桌面照片任务的生成条件；`predict` 的解析图案入口仍仅接受合成快照。
 
+桌面第 1 步的 `built-in-half-disc` 记录保存真实 `.iso.json` 和内置黑白模板。`disc.mediaType` 为 `DVD`，表示未区分 DVD-R 和 DVD+R 的 12 cm 单层盘。`confirmedWritableSectors` 为 `0`，表示实盘可写容量未经确认，计算使用旁车记录的生成扇区数。
+
 ## 照片会话 v2
 
 `PhotoSession` 使用 `schemaVersion=2`、`recordType=photo-session`，结构见 `schemas/photo-session-v2.schema.json`。
@@ -120,7 +122,7 @@ metadata 记录原始/定向文件哈希、RGB 像素哈希、原始/定向尺�
 ## 第二张计划与两盘关联
 
 `fine-target-plan` v1 保存 Disc、完整 G1、第一张快照/会话/结果哈希、候选身份及全部受支持替代模型，
-固定原图 SHA、版本/坐标/阈值/tone 契约、预计照片像素/mm、完整下一张预测和独立计划确认。
+固定原图 SHA、版本/坐标/阈值/tone 契约、预计照片像素/mm、完整下一张预测和检查状态。0.8.4 桌面进入第 4 步时自动创建并在检查通过后确认内部关联，用户无需单独创建、确认或导出计划。
 `contentSha256` 对清空自身哈希及确认字段后的内容求哈希；确认等于此哈希，且预测必须为 `plan-review`。
 修改设置、参数、来源或预测均使确认失效；不能给不合格预测补写一个确认字符串来绕过检查。
 
@@ -138,6 +140,9 @@ metadata 记录原始/定向文件哈希、RGB 像素哈希、原始/定向尺�
 `two-disc-consistency` v1 保存跨盘模型形状 RMS/最大差以及第二张实测投影的有效像素与法向线宽。
 最终两盘导出必须有第二张确认且一致性通过，沿用完整 `compensation-profile`，另附 Plan、两张照片任务及两盘报告。
 所有输出 `physicalValidation=pending`；计划输入的预计分辨率与第二张由单应估计的分辨率分别保存，不互相替代。
+
+手动参数模式保存为 `two-disc-task` v2，`evidenceMode` 为 `manual-parameters`。对应 `fine-target-plan` v2 的 `coarse` 为 `null`，`generated` 保存选用参数。参数阶段的任务可仅包含 `workflow.json`。若编辑已有粗调任务，其原始资料可以作为 `coarse.dvdphoto` 一并保存。
+手动模式仍核对实际生成记录、确认曲线和实测线宽，导出单盘 `compensation-profile`。
 
 ## 操作诊断与模拟报告
 

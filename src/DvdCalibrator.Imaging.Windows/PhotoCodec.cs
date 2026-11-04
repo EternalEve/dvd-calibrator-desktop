@@ -27,20 +27,32 @@ public static class PhotoCodec
         if (decoder is not (PngBitmapDecoder or JpegBitmapDecoder or BmpBitmapDecoder or GifBitmapDecoder or TiffBitmapDecoder))
             throw new ArgumentException("请使用 PNG、JPEG、BMP、GIF 或 TIFF 照片。");
         var frame = decoder.Frames[0];
-        int orientation = 1;
-        if (frame.Metadata is BitmapMetadata metadata)
-        {
-            foreach (string query in new[] { "/app1/ifd/{ushort=274}", "/ifd/{ushort=274}" })
-            {
-                if (metadata.ContainsQuery(query) && metadata.GetQuery(query) is { } value)
-                { orientation = Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture); break; }
-            }
-        }
+        int orientation = ReadOrientation(frame.Metadata as BitmapMetadata);
         var original = DecodeFrame(frame);
         var oriented = original.Orient(orientation);
         byte[] png = Encode(oriented);
         return new(bytes, png, new(Hash(bytes), Hash(png), oriented.PixelsSha256,
             original.Width, original.Height, oriented.Width, oriented.Height, orientation), oriented);
+    }
+
+    private static int ReadOrientation(BitmapMetadata? metadata)
+    {
+        if (metadata is null) return 1;
+        foreach (string query in new[] { "/app1/ifd/{ushort=274}", "/ifd/{ushort=274}" })
+        {
+            if (!metadata.ContainsQuery(query) || metadata.GetQuery(query) is not { } value) continue;
+            try
+            {
+                int orientation = Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture);
+                if (orientation is >= 1 and <= 8) return orientation;
+            }
+            catch (Exception e) when (e is FormatException or InvalidCastException or OverflowException)
+            {
+                // A malformed optional tag does not invalidate the decoded photo pixels.
+            }
+        }
+        // Some cameras/editors write 0 (unspecified). Keep stored pixels when no valid tag is available.
+        return 1;
     }
 
     public static RgbImage DecodePng(byte[] bytes)

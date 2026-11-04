@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using DvdCalibrator.Core;
 using DvdCalibrator.Imaging.Windows;
 
@@ -24,7 +25,17 @@ internal static class InstallationCheck
             Require(RecordJson.Hash(restored.Fit!) == RecordJson.Hash(trace.Fit!), "Single-disc fit changed on restore.");
             Require(restored.Photo.Image.PixelsSha256 == trace.Photo.Image.PixelsSha256, "Source pixels changed on restore.");
 
-            var workflow = SyntheticPhoto.CreateTwoDiscDemo(); var fine = workflow.Fine!; var review = fine.FitTrace();
+            var dense = SyntheticPhoto.CreateDenseDemo(new(23.985, 57.995, 2295104, 133.3, .02, -.03, .015, SpiralDirection.Cw, GeometryParameters.Convention, 0));
+            dense.Session = dense.Session.WithTraces([]);
+            dense.AttachDense(WfrAnalyzer.Analyze(dense.AnalyticSnapshot(), dense.Session, dense.Photo.Image));
+            Require(dense.Dense!.Candidates.Any(c => c.Supported), "Packaged WFR failed to recognize the known stripe geometry.");
+            string wfrPath = Path.Combine(folder, "wfr.dvdphoto"); dense.SaveNew(wfrPath);
+            Require(RecordJson.Hash(PhotoTask.Load(wfrPath).Dense!) == RecordJson.Hash(dense.Dense), "WFR changed on restore.");
+
+            var workflow = SyntheticPhoto.CreateTwoDiscDemo(); var fine = workflow.Fine!;
+            var (detected, automatic) = fine.FitCrossAutomatically();
+            Require(detected.Traces.Length == 2 && automatic.Selected.EligibleForReview, "Packaged automatic cross fit failed.");
+            var review = fine.FitTrace();
             fine.AttachFit(review.Confirm(fine.Snapshot.Geometry, fine.Snapshot.Hash, fine.Session));
             workflow.SaveNew(Path.Combine(folder, "two-disc.dvdcal"));
             var loaded = TwoDiscTask.Load(Path.Combine(folder, "two-disc.dvdcal"));
@@ -34,7 +45,24 @@ internal static class InstallationCheck
 
             var window = new MainWindow(); var content = (FrameworkElement)window.Content;
             content.Measure(new Size(1380, 1000)); content.Arrange(new Rect(0, 0, 1380, 1000)); content.UpdateLayout();
+            Require(Enum.GetValues<CalibrationStep>().All(window.GoToStep), "Blank wizard navigation is locked.");
+            var manual = TwoDiscTask.CreateManual(workflow.Plan.Disc, workflow.Plan.Generated);
+            manual.ConfirmPlan();
+            var manualPath = Path.Combine(folder, "manual.dvdcal"); manual.SaveNew(manualPath);
+            window.LoadTwoDiscTask(TwoDiscTask.Load(manualPath));
+            Require(window.CurrentStep == CalibrationStep.Plan && window.GoToStep(CalibrationStep.FineImport), "Manual parameter workflow did not restore.");
+            window.LoadPhotoTask(dense);
+            Require(window.GoToStep(CalibrationStep.Plan) && window.GoToStep(CalibrationStep.FineImport), "Automatic second-disc preparation failed.");
             window.LoadTwoDiscTask(loaded);
+            var reviewFrame = new DispatcherFrame();
+            var finalReview = window.Dispatcher.InvokeAsync(async () =>
+            {
+                try { await window.ReviewFinalAsync(); }
+                finally { reviewFrame.Continue = false; }
+            }).Task.Unwrap();
+            Dispatcher.PushFrame(reviewFrame);
+            finalReview.GetAwaiter().GetResult();
+            Require(window.FinalReady, "Packaged wizard could not display verified compensation parameters.");
             content.Measure(new Size(1380, 1000)); content.Arrange(new Rect(0, 0, 1380, 1000)); content.UpdateLayout();
             var bitmap = new RenderTargetBitmap(1380, 1000, 96, 96, PixelFormats.Pbgra32); bitmap.Render(content);
             var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap));
@@ -57,7 +85,7 @@ internal static class InstallationCheck
             applicationDirectory = basePath, runtimeDirectory = runtimePath, wpfAssembly = wpfPath,
             localCoreRuntime = string.Equals(basePath, runtimePath, StringComparison.OrdinalIgnoreCase),
             localWpfRuntime = string.Equals(Path.GetDirectoryName(wpfPath), basePath, StringComparison.OrdinalIgnoreCase),
-            singleDiscRestore = "passed", twoDiscRestore = "passed", finalExport = "passed", offscreenWpfPng = "passed",
+            singleDiscRestore = "passed", twoDiscRestore = "passed", wfrRestore = "passed", finalExport = "passed", offscreenWpfPng = "passed",
             nativeInteraction = "pending", physicalValidation = "pending"
         });
     }

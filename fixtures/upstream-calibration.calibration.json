@@ -1,0 +1,31 @@
+{
+  "target": {
+    "schemaVersion": 6,
+    "id": "8ecb164688164159b9ed5d64e9861156",
+    "parameters": {
+      "kind": "Dvd",
+      "innerRadiusMm": 24.003,
+      "outerRadiusMm": 58.006,
+      "sectors": 2295104,
+      "linearDensity": 133.3,
+      "pitchLinear": 0.02,
+      "pitchQuadratic": -0.03,
+      "pitchCubic": 0.015,
+      "bluRayInvertMapping": false,
+      "drawingStartSector": 0,
+      "bluRayIsoTimestamp": null,
+      "drawingEndSectorExclusive": 0
+    },
+    "options": {
+      "largeCellMm": 8.421795665634676,
+      "mediumCellMm": 4.210897832817338,
+      "smallCellMm": 2.105448916408669,
+      "sectorGapMm": 1
+    },
+    "cells": []
+  },
+  "observations": [],
+  "fitOptions": null,
+  "cdInterleave": true,
+  "photo": null
+}

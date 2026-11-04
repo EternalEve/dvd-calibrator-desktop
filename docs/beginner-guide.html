@@ -1,0 +1,154 @@
+<!doctype html>
+<!-- Generated from guided-workflow.md and material-preparation.md. Run tools/Render-BeginnerGuide.ps1. -->
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DVD Calibrator · 新手教程</title><style>
+:root{color-scheme:dark}*{box-sizing:border-box}html{scroll-padding-top:24px}
+body{margin:0;background:#11151c;color:#e7ecf3;font:16px/1.85 system-ui,"Microsoft YaHei UI",sans-serif}
+nav{position:fixed;inset:0 auto 0 0;width:230px;padding:28px 20px;background:#1a202b;overflow:auto;border-right:1px solid #344155}
+nav b{display:block;margin-bottom:14px;color:#fff}nav a{display:block;padding:7px 8px;border-radius:5px;text-decoration:none;color:#bac7d7;font-size:14px}
+nav a:hover,nav a:focus{background:#263950;color:#fff}main{max-width:1160px;margin-left:230px;padding:32px 50px 100px}
+h1{font-size:29px;line-height:1.5;margin:12px 0 28px}section+section h1{border-top:2px solid #4b87b7;padding-top:48px;margin-top:64px}
+h2{font-size:22px;line-height:1.55;margin:48px 0 16px;padding-bottom:10px;border-bottom:1px solid #344155;color:#f3f7ff}
+p{margin:14px 0}li{margin:10px 0}a{color:#8fc9ff;text-underline-offset:3px}strong{color:#fff}
+code{font:14px/1.65 Consolas,"Microsoft YaHei UI",monospace;background:#202b3a;border-radius:4px;padding:2px 5px;overflow-wrap:anywhere}
+pre{background:#0d1117;padding:20px;border:1px solid #344155;border-radius:8px;overflow:auto}
+pre code{padding:0;background:none;white-space:pre;overflow-wrap:normal}
+table{border-collapse:collapse;width:100%;font-size:14px;line-height:1.8}td,th{border:1px solid #344155;padding:12px 14px;text-align:left;overflow-wrap:anywhere}th{background:#202b3a}
+@media(max-width:800px){nav{position:static;width:auto;border-right:0;border-bottom:1px solid #344155}nav a{display:inline-block}main{margin:0;padding:22px}h1{font-size:24px}table{display:block;overflow:auto}}
+@media print{nav{display:none}main{margin:0;padding:0;max-width:none}body{background:white;color:#111}h1,h2,strong{color:#111}code,pre,th{background:#eee;color:#111}a{color:#164c80}pre,pre code{white-space:pre-wrap}h2{break-after:avoid}}
+</style></head><body><nav><b>DVD CALIBRATOR<br>从第一次使用开始</b><a href="#start">两张盘标定流程</a><a href="#materials">第一张的文件位置</a><a href="#step-1">1. 准备第一张</a><a href="#step-2">2. 校正第一张</a><a href="#step-3">3. 识别黑白盘</a><a href="#step-4">4. 制作精调盘</a><a href="#step-5">5. 提交精调材料</a><a href="#step-6">6. 校正第二张</a><a href="#step-7">7. 计算精调</a><a href="#step-8">8. 使用最终参数</a></nav><main><section id="start"><h1 id="guide-dvd">两张盘完成 DVD 标定</h1>
+<p>DiscImageStudio 负责生成镜像；DVD Calibrator 负责测量照片、输出补偿参数。准备两张同类型的 12 cm 单层 DVD-R 或 DVD+R、刻录机和相机。</p>
+<p>流程：<strong>黑白盘 → 提交材料 → 粗调 → 辅助标定盘 → 提交材料 → 精调</strong>。下面按本工具左侧的 8 个页面操作。</p>
+<p>左侧各步骤可直接打开。缺少材料时，页面会提示需要到哪一步提交或确认。</p>
+<h2 id="step-1">第 1 步：准备第一张标定盘</h2>
+<p><strong>去 DVD Calibrator：</strong> 在第 1 页点“保存黑白标定图”，保存为 <code>黑白粗调.png</code>。</p>
+<p><strong>去 DiscImageStudio：</strong></p>
+<ol>
+<li>首页点“新建工程”，选择 DVD，保留默认参数。</li>
+<li>到“设计”页点“导入图片”，选择 <code>黑白粗调.png</code>。保持居中、旋转 0°、缩放 100%。</li>
+<li>到“导出”页选择输出位置，例如 <code>D:/DVD标定/第一张/first.iso</code>，点“生成镜像”。</li>
+<li>在刻录软件中选择“刻录镜像”，将 <code>first.iso</code> 写入第一张空白盘。</li>
+</ol>
+<p><strong>取回材料，提交到本工具第 1 页：</strong></p>
+<table>
+<thead>
+<tr>
+<th>去哪里取</th>
+<th>取哪个文件</th>
+<th>提交到哪里</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>刚才选择的 ISO 输出目录</td>
+<td><code>first.iso.json</code></td>
+<td>点“选择生成记录”</td>
+</tr>
+<tr>
+<td>拍摄第一张盘的记录面，保留完整外缘、中心孔和清晰图案</td>
+<td>原始 JPG / PNG 照片</td>
+<td>点“选择第一张照片”</td>
+</tr>
+</tbody>
+</table>
+<p>提交记录和照片后，点“下一步：校正第一张照片”。软件自动使用内置黑白图案。</p>
+<p>选错或重拍后，在第 1 页更换或移除照片。重新提交照片后，从第 2 步重新测量。</p>
+<h2 id="step-2">第 2 步：校正第一张照片</h2>
+<p><strong>在本工具第 2 页：</strong></p>
+<ol>
+<li>点“标外缘”，沿实体盘片最外侧均匀点 8–16 点。</li>
+<li>点“标中心孔”，沿直径 15 mm 的贯通孔均匀点 8–16 点。</li>
+<li>点“计算联合矫正”，检查两圈橙色轮廓是否贴合盘边和孔边。</li>
+<li>贴合后点“确认矫正”，再点下一步；需要修正时拖点后重算。</li>
+</ol>
+<p>画布操作：左键加点或拖点，滚轮缩放，右键平移，Delete 删除选中点。</p>
+<h2 id="step-3">第 3 步：识别黑白盘，计算粗调</h2>
+<p><strong>在本工具第 3 页：</strong> 点“分析密环 / 混合”。计算完成后，放大检查紫色预测线是否沿着清楚区域的条纹边界。</p>
+<p>得到受支持的粗调结果后，点下一步。</p>
+<h2 id="step-4">第 4 步：用粗调参数制作精调盘</h2>
+<p><strong>先在本工具第 4 页：</strong></p>
+<p>查看本页直接显示的粗调参数。可选中单个数值复制，也可点“复制参数”。本步骤无需导出文件或图案。</p>
+<p>已有参数时，在第 1 页点“使用已有参数”，或在第 4 页点“编辑 / 使用已有参数”。可手填、粘贴“复制参数”得到的文本、打开旧补偿配置或精调计划。选好盘片类型后点“应用参数”。可选填名称并“保存为预设”，下次直接选用。</p>
+<p>手动参数从第 4 步开始。按第 5 至 7 步提交实际记录和照片、确认精调曲线，再在第 8 步查看并复制单盘精调参数。若任务已有粗调测量，可在第 4 页点“使用本次粗调结果”切回两盘流程。需要暂停时点“保存进度”，下次用“打开任务”继续。</p>
+<p><strong>再去 DiscImageStudio：</strong></p>
+<ol>
+<li>打开“工程设置”，按本工具第 4 页显示的数值填入内半径、外半径、扇区数和三项轨距系数，核对位长与方向，点“确定”。</li>
+<li>到“标定”页找到“生成标定盘”，确认显示的内外半径正确。选择 ISO 输出位置，例如 <code>D:/DVD标定/第二张/fine.iso</code>，点击“生成镜像/音轨”。</li>
+<li>用刻录软件把 <code>fine.iso</code> 写入第二张同类型空白盘，保持与第一张相同的刻录机和写入设置。</li>
+<li>拍摄第二张盘的记录面，保留完整外缘、中心孔和清晰十字线。回本工具下一步提交所选位置中与 ISO 同名的 <code>.calibration.json</code> 和照片。</li>
+</ol>
+<p>辅助标定使用原软件自带的图案，无需手动导入、居中或缩放图片。参数关联和拍摄要求由本工具内部检查；需要暂停时，点右上角“保存进度”。</p>
+<h2 id="step-5">第 5 步：提交精调盘材料</h2>
+<p><strong>回本工具第 5 页，点“导入第二张照片”：</strong></p>
+<table>
+<thead>
+<tr>
+<th>去哪里取</th>
+<th>取哪个文件</th>
+<th>在哪里提交</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第二张 ISO 的输出目录，如 <code>D:/DVD标定/第二张/</code></td>
+<td><code>fine.calibration.json</code></td>
+<td>第一个文件选择窗口</td>
+</tr>
+<tr>
+<td>第二张盘的实拍照片目录</td>
+<td>原始 JPG / PNG 照片</td>
+<td>第二个文件选择窗口</td>
+</tr>
+</tbody>
+</table>
+<p>这条辅助标定流程只需记录和照片两份文件。导入后点下一步。</p>
+<p>选错或重拍后，在第 5 页更换或移除照片。更换生成记录时，同时选择与它对应的照片。</p>
+<h2 id="step-6">第 6 步：校正第二张照片</h2>
+<p><strong>在本工具第 6 页：</strong> 重新标外缘和中心孔各 8–16 点→“计算联合矫正”→核对橙色轮廓→“确认矫正”→下一步。</p>
+<h2 id="step-7">第 7 步：计算精调</h2>
+<p><strong>在本工具第 7 页：</strong></p>
+<ol>
+<li>点“自动描线并拟合”，检查描点和整条橙线是否贴着十字臂。</li>
+<li>请自行删除偏差较大的点。切换到对应描线，选中点后按 Delete。修改后点“拟合描线”。</li>
+<li>核对后点“确认候选曲线”，再点下一步。</li>
+</ol>
+<p>有反光时可先标遮罩。若自动描线失败，也可沿一条十字臂中心从内向外手动描点，主线至少 24 点，覆盖记录环带径向宽度的 60% 以上。</p>
+<h2 id="step-8">第 8 步：查看并使用补偿参数</h2>
+<p><strong>在本工具第 8 页：</strong> 软件自动检查结果。通过后，选中单个数值复制，或点“复制补偿参数”复制整组。</p>
+<p><strong>去 DiscImageStudio：</strong> 在“工程设置”填入本页参数并确定。到“设计”页导入正式图片，然后生成镜像并刻录。</p>
+<h2 id="guide-section-8">保存与继续</h2>
+<p>在本工具右上角点“保存进度”，保存任务包。下次点“打开任务”选择该文件，继续未完成的步骤。</p>
+<p>本教程对应 DiscImageStudio 1.3.6 的 DVD 流程。最终刻录效果由后续实盘图案验证。</p>
+</section><section id="materials"><h1 id="materials-section">第一张盘的文件位置</h1>
+<p>从零开始时，先按<a href="#step-1">第 1 步：准备第一张标定盘</a>保存黑白图，再到 DiscImageStudio 生成 <code>first.iso</code> 并刻录。</p>
+<h2 id="materials-section-1">生成记录在哪里</h2>
+<p>到你在 DiscImageStudio“导出”页选择的 ISO 输出目录，取与 ISO 同名的 JSON。</p>
+<p>例如输出为 <code>D:/DVD标定/第一张/first.iso</code>，记录就是：</p>
+<p><code>D:/DVD标定/第一张/first.iso.json</code></p>
+<p>回本工具第 1 页，点“选择生成记录”提交它。</p>
+<h2 id="materials-section-2">盘片照片交到哪里</h2>
+<p>拍摄第一张盘有刻录图案的记录面，拍全实体外缘和中心孔。将原照片复制到电脑，在本工具第 1 页点“选择第一张照片”提交。</p>
+<h2 id="materials-section-3">两张盘分别交什么</h2>
+<table>
+<thead>
+<tr>
+<th>盘片</th>
+<th>到哪里取文件</th>
+<th>本工具入口</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>第一张黑白盘</td>
+<td>ISO 目录取 <code>first.iso.json</code>；再取第一张照片</td>
+<td>第 1 页“选择生成记录”及“选择第一张照片”</td>
+</tr>
+<tr>
+<td>第二张辅助标定盘</td>
+<td>ISO 目录取 <code>fine.calibration.json</code>；再取第二张照片</td>
+<td>第 5 页“导入第二张照片”</td>
+</tr>
+</tbody>
+</table>
+<p><code>first</code> 和 <code>fine</code> 是本教程示例文件名；使用其他名称时，取对应同名记录。</p>
+</section></main></body></html>

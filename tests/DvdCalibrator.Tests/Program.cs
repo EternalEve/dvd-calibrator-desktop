@@ -8,6 +8,7 @@ string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../
 var schemaTypes = new (string Name, Type Type)[] { ("geometry", typeof(GeometryParameters)),
     ("generation-snapshot", typeof(GenerationSnapshot)), ("observations", typeof(Observations)),
     ("external-generation-snapshot", typeof(ExternalGenerationSnapshot)),
+    ("upstream-calibration-generation", typeof(CalibrationGeneration)),
     ("photo-session-v2", typeof(PhotoSession)),
     ("trace-fit-review", typeof(TraceFitReview)), ("compensation-profile", typeof(CompensationProfile)),
     ("dense-analysis", typeof(DenseAnalysis)),

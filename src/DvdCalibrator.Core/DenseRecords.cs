@@ -40,13 +40,15 @@ public sealed record NextDiscDiagnostic(GeometryParameters Generated, PatternDef
 public sealed record DenseAnalysis(int SchemaVersion, string RecordType, string AlgorithmVersion,
     string SnapshotSha256, string SessionSha256, DenseSettings Settings, DenseObservations Observations,
     string QualityStatus, string PhysicalValidation, ImmutableArray<DenseCandidate> Candidates,
-    NextDiscDiagnostic? NextDisc, ImmutableArray<string> Warnings)
+    NextDiscDiagnostic? NextDisc, ImmutableArray<string> Warnings,
+    [property: System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)] WfrEvidence? Wfr = null)
 {
     public const string Algorithm = "half-disc-multiangle-fragments-v1";
     // Re-extract from the hash-bound original and rescore, without rerunning parameter optimization.
     // This also rejects changed branches, diagnostic curves, statistics and eligibility flags on load.
-    public void Verify(GenerationSnapshot snapshot, PhotoSession session, RgbImage image, CancellationToken token = default)
+    public void Verify(IHalfDiscGeneration snapshot, PhotoSession session, RgbImage image, CancellationToken token = default)
     {
+        if (AlgorithmVersion == WfrAnalyzer.Algorithm) { WfrAnalyzer.Verify(this, snapshot, session, image, token); return; }
         Settings.Validate(); snapshot.Validate(); session.Validate();
         if (SchemaVersion != 1 || RecordType != "dense-analysis" || AlgorithmVersion != Algorithm
             || SnapshotSha256 != snapshot.ContentSha256 || SessionSha256 != RecordJson.Hash(session)

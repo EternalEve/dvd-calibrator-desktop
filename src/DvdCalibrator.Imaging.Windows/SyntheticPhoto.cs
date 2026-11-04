@@ -56,9 +56,9 @@ public static class SyntheticPhoto
             .WithTraces([new("line-1", Trace(0, 64)), new("validation-180", Trace(Math.PI, 48))]);
         return new(bundle, photo, session);
     }
-    public static PhotoTask CreateDenseDemo()
+    public static PhotoTask CreateDenseDemo(GeometryParameters? generated = null)
     {
-        var g = new GeometryParameters(24, 58, 2295104, 133.3, .02, -.03, .015, SpiralDirection.Cw, GeometryParameters.Convention, 0);
+        var g = generated ?? new GeometryParameters(24, 58, 2295104, 133.3, .02, -.03, .015, SpiralDirection.Cw, GeometryParameters.Convention, 0);
         var snapshot = GenerationSnapshot.CreateSynthetic("synthetic-dense-mixed-demo", new("DVD+R", 120, 15, 1, null), g,
             new("half-disc-dense-demo", "half-disc", .3, "analytic-disc-xy-v1"));
         var bundle = new SnapshotBundle(new() { ["generation.json"] = JsonSerializer.SerializeToUtf8Bytes(snapshot, RecordJson.Options) });

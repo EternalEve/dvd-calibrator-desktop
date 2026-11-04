@@ -25,15 +25,15 @@ public sealed partial class MainWindow : Window
     private readonly ComboBox shapeOrder = new() { Width = 145, Margin = new(3), ItemsSource = new[] { "保留轨距形状", "拟合一阶形状", "拟合二阶形状", "拟合三阶形状" }, SelectedIndex = 0 };
     private readonly ComboBox candidateBox = new() { MinWidth = 260, Margin = new(3), Name = "FitCandidateSelector" };
     private readonly TextBlock fitDetail = new() { Margin = new(8), TextWrapping = TextWrapping.Wrap };
-    private readonly Button traceFitButton, traceConfirmButton, profileButton;
-    private readonly Button denseButton, denseExportButton;
+    private Button traceFitButton = null!, autoTraceFitButton = null!, traceConfirmButton = null!, profileButton = null!;
+    private Button denseButton = null!, denseExportButton = null!;
     private readonly TextBlock denseDetail = new() { Name = "DenseDiagnostic", Margin = new(8), TextWrapping = TextWrapping.Wrap };
     private bool updatingCandidates;
     private TraceFitResult? displayedResult;
     private readonly TextBlock status = new() { TextWrapping = TextWrapping.Wrap, Margin = new(14, 8, 14, 8) };
     private readonly TextBlock detail = new() { TextWrapping = TextWrapping.Wrap, Margin = new(14), FontSize = 13 };
     private readonly TextBlock counts = new() { Margin = new(8), VerticalAlignment = VerticalAlignment.Center };
-    private readonly Button fitButton, confirmButton, saveButton, cancelButton;
+    private Button fitButton = null!, confirmButton = null!, saveButton = null!, cancelButton = null!;
     private readonly Slider zoomSlider = new() { Name = "SourceZoom", Minimum = .08, Maximum = 5, Value = 1, Width = 130, Margin = new(10), VerticalAlignment = VerticalAlignment.Center };
     private readonly List<PixelPoint> draftMask = [];
     private int selected = -1;
@@ -47,58 +47,7 @@ public sealed partial class MainWindow : Window
         Title = "DVD Calibrator · 两盘任务与照片标注"; Width = 1380; Height = 1000; MinWidth = 1050; MinHeight = 800;
         SetResourceReference(BackgroundProperty, "AppBackgroundBrush"); SetResourceReference(ForegroundProperty, "TextPrimaryBrush");
         FontFamily = new("Microsoft YaHei UI"); FontSize = 13;
-        var root = new DockPanel { Background = Background }; Content = root;
-        var heading = new StackPanel { Margin = new(16, 12, 16, 4) };
-        heading.Children.Add(new TextBlock { Text = "DVD CALIBRATOR", FontSize = 23, FontWeight = FontWeights.SemiBold });
-        var subtitle = new TextBlock { Text = "两盘标定与照片工作区    ·    12 cm 单层 DVD", FontSize = 13, Margin = new(0, 4, 0, 4) };
-        subtitle.SetResourceReference(TextBlock.ForegroundProperty, "TextSecondaryBrush"); heading.Children.Add(subtitle);
-        DockPanel.SetDock(heading, Dock.Top); root.Children.Add(heading);
-        var toolbar = new WrapPanel { Margin = new(12, 0, 12, 4) };
-        toolbar.Children.Add(Button("打开生成快照", OpenSnapshot)); toolbar.Children.Add(Button("导入照片", ImportPhoto));
-        toolbar.Children.Add(Button("打开任务包", OpenTask)); saveButton = Button("保存为新任务包", SaveTask); toolbar.Children.Add(saveButton);
-        toolbar.Children.Add(Button("载入合成演示", LoadDemo)); toolbar.Children.Add(Button("导出预览", ExportPreviews));
-        toolbar.Children.Add(Button("载入拟合演示", LoadTraceDemo));
-        toolbar.Children.Add(Button("载入密环演示", LoadDenseDemo));
-        DockPanel.SetDock(toolbar, Dock.Top); root.Children.Add(toolbar);
-        var workflowBar = BuildTwoDiscToolbar(); DockPanel.SetDock(workflowBar, Dock.Top); root.Children.Add(workflowBar);
-        var footer = new Border { Child = status, MinHeight = 46, BorderThickness = new(0, 1, 0, 0) };
-        footer.SetResourceReference(Border.BackgroundProperty, "StatusBackgroundBrush");
-        footer.SetResourceReference(Border.BorderBrushProperty, "SurfaceBorderBrush");
-        DockPanel.SetDock(footer, Dock.Bottom); root.Children.Add(footer);
-        var workspace = new Grid { Margin = new(12, 2, 12, 12) };
-        workspace.ColumnDefinitions.Add(new() { Width = new(3, GridUnitType.Star) }); workspace.ColumnDefinitions.Add(new() { Width = new(10) });
-        workspace.ColumnDefinitions.Add(new() { Width = new(2, GridUnitType.Star) }); root.Children.Add(workspace);
-        var left = new DockPanel(); left.SetResourceReference(Panel.BackgroundProperty, "PanelBackgroundBrush"); workspace.Children.Add(left);
-        var editing = new WrapPanel { Margin = new(6) }; editing.Children.Add(mode);
-        editing.Children.Add(Button("删除选中点", DeleteSelected)); editing.Children.Add(Button("撤销最后一点", UndoPoint));
-        editing.Children.Add(Button("清空当前标注", ClearCurrent)); editing.Children.Add(Button("结束遮罩", FinishMask));
-        editing.Children.Add(Button("适合窗口", FitView)); editing.Children.Add(zoomSlider);
-        DockPanel.SetDock(editing, Dock.Top); left.Children.Add(editing);
-        DockPanel.SetDock(counts, Dock.Bottom); left.Children.Add(counts);
-        scroll.SetResourceReference(Control.BackgroundProperty, "ViewportBackgroundBrush");
-        scroll.Content = canvas; left.Children.Add(scroll); canvas.Children.Add(photoImage);
-        var right = new DockPanel(); right.SetResourceReference(Panel.BackgroundProperty, "PanelBackgroundBrush"); Grid.SetColumn(right, 2); workspace.Children.Add(right);
-        var actions = new WrapPanel { Margin = new(8) };
-        fitButton = Button("计算联合矫正", async () => await Compute()); actions.Children.Add(fitButton);
-        confirmButton = Button("确认矫正", Confirm); actions.Children.Add(confirmButton);
-        cancelButton = Button("取消计算", CancelCalculation); actions.Children.Add(cancelButton);
-        DockPanel.SetDock(actions, Dock.Top); right.Children.Add(actions);
-        var fitting = new StackPanel { Margin = new(8, 0, 8, 0) };
-        var options = new WrapPanel(); options.Children.Add(shapeOrder);
-        traceFitButton = Button("拟合描线", async () => await ComputeTraceFit()); options.Children.Add(traceFitButton);
-        traceConfirmButton = Button("确认候选曲线", ConfirmTraceFit); options.Children.Add(traceConfirmButton);
-        profileButton = Button("导出补偿配置", ExportProfile); options.Children.Add(profileButton);
-        fitting.Children.Add(options); fitting.Children.Add(candidateBox); fitting.Children.Add(fitDetail);
-        var denseActions = new WrapPanel();
-        denseButton = Button("分析密环 / 混合", async () => await ComputeDense()); denseActions.Children.Add(denseButton);
-        denseExportButton = Button("导出密环诊断", ExportDense); denseActions.Children.Add(denseExportButton);
-        fitting.Children.Add(denseActions); fitting.Children.Add(denseDetail);
-        DockPanel.SetDock(fitting, Dock.Top); right.Children.Add(fitting);
-        DockPanel.SetDock(detail, Dock.Bottom); right.Children.Add(detail);
-        var tabs = new TabControl { Margin = new(8, 0, 8, 0) };
-        tabs.Items.Add(new TabItem { Header = "正视预览", Content = rectified });
-        tabs.Items.Add(new TabItem { Header = "极坐标 · 横向逆时针角 / 纵向半径", Content = polar }); right.Children.Add(tabs);
-        tabs.Items.Add(new TabItem { Header = "第二张完整预测", Content = fineForecastImage });
+        Content = BuildWizard();
         mode.SelectionChanged += (_, _) =>
         {
             if (draftMask.Count > 0 && mode.SelectedIndex != 2)
@@ -107,7 +56,7 @@ public sealed partial class MainWindow : Window
                 SetStatus("遮罩草稿尚未结束，请点击“结束遮罩”，或按 Esc 放弃草稿后再切换模式。");
                 return;
             }
-            selected = -1; Draw();
+            selected = -1; Draw(); RefreshWizard();
         };
         shapeOrder.SelectionChanged += (_, _) => { if (!updatingCandidates && task?.Fit is not null) { task.ClearFit(); dirty = true; Refresh(); Draw(); } };
         candidateBox.SelectionChanged += (_, _) =>
@@ -121,7 +70,7 @@ public sealed partial class MainWindow : Window
         canvas.MouseRightButtonDown += (_, e) => { panStart = e.GetPosition(scroll); panX = scroll.HorizontalOffset; panY = scroll.VerticalOffset; canvas.CaptureMouse(); e.Handled = true; };
         canvas.MouseRightButtonUp += (_, _) => { panStart = null; canvas.ReleaseMouseCapture(); };
         canvas.PreviewMouseWheel += (_, e) => { zoomSlider.Value = Math.Clamp(zoomSlider.Value * (e.Delta > 0 ? 1.15 : 1 / 1.15), .08, 5); e.Handled = true; };
-        canvas.KeyDown += (_, e) => { if (e.Key == Key.Delete) DeleteSelected(); if (e.Key == Key.Escape) { draftMask.Clear(); selected = -1; Refresh(); Draw(); } };
+        canvas.KeyDown += (_, e) => { if (e.Key == Key.Delete) DeleteSelected(); if (e.Key == Key.Escape) DiscardMaskDraft(); };
         Closing += (_, e) =>
         {
             if (calculation is not null)
@@ -131,15 +80,25 @@ public sealed partial class MainWindow : Window
             }
             else if (!MayReplace()) e.Cancel = true;
         };
-        Loaded += (_, _) => { FitView(); if (task?.Session.Rectification is not null && rectified.Source is null) _ = RefreshPreviews(); };
-        SetStatus("先打开与实体盘对应的生成快照，再导入照片；也可载入合成演示体验标注流程。"); Refresh();
+        Loaded += (_, _) =>
+        {
+            FitView();
+            if (CurrentStep == CalibrationStep.Finish) _ = ReviewFinalAsync();
+            else if (IsPhotoPage && task?.Session.Rectification is not null && rectified.Source is null) _ = RefreshPreviews();
+        };
+        SetStatus("按本页步骤准备标定盘。已有进度可点右上角“打开任务”。"); Refresh();
     }
 
     private static Button Button(string text, Action action)
     {
-        var button = new Button { Content = text }; System.Windows.Automation.AutomationProperties.SetName(button, text);
+        var button = new Button(); SetButtonLabel(button, text);
         button.Click += (_, _) => { try { action(); } catch (Exception e) when (Expected(e)) { MessageBox.Show(CalibrationGuidance.Describe(e), "无法完成操作", MessageBoxButton.OK, MessageBoxImage.Information); } };
         return button;
+    }
+    private static void SetButtonLabel(Button button, string text)
+    {
+        button.Content = text;
+        System.Windows.Automation.AutomationProperties.SetName(button, text);
     }
     private static bool Expected(Exception e) => e is ArgumentException or IOException or UnauthorizedAccessException
         or System.Text.Json.JsonException or InvalidOperationException or NotSupportedException or KeyNotFoundException
@@ -162,21 +121,47 @@ public sealed partial class MainWindow : Window
     private void OpenSnapshot()
     {
         if (calculation is not null) return;
-        var dialog = new OpenFileDialog { Filter = "冻结生成快照|*.json", Title = "选择第一阶段冻结的 generation.json" };
+        var dialog = new OpenFileDialog { Filter = "第一张生成记录|*.iso.json;generation.json;*.json", Title = "选择第一张 ISO 同目录的 .iso.json" };
         if (dialog.ShowDialog() != true) return;
-        var next = SnapshotBundle.Load(dialog.FileName);
+        var next = SelectGeneration(dialog.FileName, fine: false);
+        if (next is null) return;
         if (!MayReplace()) return;
-        twoDisc = null; pendingSnapshot = next; task = null; dirty = false; draftMask.Clear(); ClearPreviews(); photoImage.Source = null;
-        canvas.Width = canvas.Height = 0; Draw(); Refresh(); SetStatus($"已载入生成快照 {next.Id}，请导入此盘照片。");
+        ResetFirstInput(next);
+        SetStatus("第一张生成记录已选择，请选择这张盘的记录面照片。");
     }
     private void ImportPhoto()
     {
-        if (calculation is not null) return;
-        var snapshot = pendingSnapshot ?? task?.Snapshot;
+        if (calculation is not null || !MaskDraftReady()) return;
+        var snapshot = pendingSnapshot;
         if (snapshot is null) { SetStatus("请先打开对应的冻结生成快照。"); return; }
-        var dialog = new OpenFileDialog { Filter = "照片|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff" };
-        if (dialog.ShowDialog() != true || !MayReplace()) return;
-        Load(new(snapshot, PhotoCodec.Import(dialog.FileName)), true);
+        var dialog = new OpenFileDialog { Filter = "照片|*.png;*.jpg;*.jpeg;*.bmp;*.gif;*.tif;*.tiff", Title = "选择第一张盘的记录面照片" };
+        if (dialog.ShowDialog(this) != true) return;
+        var next = new PhotoTask(snapshot, PhotoCodec.Import(dialog.FileName));
+        if (!MayChangeFirstPhoto()) return;
+        CurrentStep = CalibrationStep.Prepare;
+        Load(next, true, false);
+        SetStatus("第一张资料已准备好。点击下一步，开始标外缘和中心孔。");
+    }
+    private void RemoveFirstPhoto()
+    {
+        if (calculation is not null || FirstPhoto is null || !MaskDraftReady() || !MayChangeFirstPhoto()) return;
+        ResetFirstInput(pendingSnapshot);
+        SetStatus("第一张照片已移除，生成记录已保留。请选择照片。");
+    }
+    private bool MayChangeFirstPhoto() => MayChangePhoto(FirstPhoto,
+        "更换或移除第一张照片会清除第一张的标注和测量，以及依赖它的第二张进度。继续？",
+        twoDisc?.Fine is not null);
+    private bool MayChangePhoto(PhotoTask? current, string impact, bool hasDependentPhoto = false)
+    {
+        if (!hasDependentPhoto && (current is null || (current.Session.OuterBoundary.IsEmpty && current.Session.HoleBoundary.IsEmpty
+            && current.Session.Masks.IsEmpty && current.Session.Traces.IsEmpty))) return true;
+        return MessageBox.Show(this, impact, "更新照片", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
+    }
+    private void ResetFirstInput(SnapshotBundle? snapshot)
+    {
+        task = null; twoDisc = null; pendingSnapshot = snapshot; dirty = false; draftMask.Clear(); selected = -1;
+        CurrentStep = CalibrationStep.Prepare; photoImage.Source = null; canvas.Width = canvas.Height = 0;
+        ClearPreviews(); Draw(); Refresh();
     }
     private void OpenTask()
     {
@@ -203,24 +188,32 @@ public sealed partial class MainWindow : Window
         SetStatus("密环演示含半盘变频、低对比缺失带与局部描线。点击“分析密环 / 混合”，检查片段、留出和下一张预测；这是软件合成样本。");
     }
     public void LoadPhotoTask(PhotoTask next) => Load(next, false);
-    private void Load(PhotoTask next, bool changed)
+    private void Load(PhotoTask? next, bool changed, bool selectStep = true)
     {
         if (twoDisc is not null && !ReferenceEquals(next, twoDisc.Coarse) && !ReferenceEquals(next, twoDisc.Fine)) twoDisc = null;
-        task = next; pendingSnapshot = next.Snapshot; dirty = changed; selected = -1; draftMask.Clear();
-        updatingCandidates = true; shapeOrder.SelectedIndex = next.Fit?.Result.Settings.ShapeOrder ?? 0; updatingCandidates = false;
-        photoImage.Source = PhotoCodec.Bitmap(next.Photo.Image);
-        canvas.Width = photoImage.Width = next.Photo.Image.Width; canvas.Height = photoImage.Height = next.Photo.Image.Height;
-        ClearPreviews(); FitView(); Refresh(); Draw();
-        SetStatus("沿实体外缘和真实孔缘各点击 8–16 点，覆盖整圈。滚轮缩放、右键拖动画面；拖动标记可修正。");
-        if (next.Session.Rectification is not null && IsLoaded) _ = RefreshPreviews();
+        if (twoDisc is null) finePixels.Text = "8";
+        task = next; pendingSnapshot = twoDisc is null ? next?.Snapshot : twoDisc.Coarse?.Snapshot;
+        dirty = changed; selected = -1; draftMask.Clear();
+        updatingCandidates = true; shapeOrder.SelectedIndex = next?.Fit?.Result.Settings.ShapeOrder ?? 0; updatingCandidates = false;
+        photoImage.Source = next is null ? null : PhotoCodec.Bitmap(next.Photo.Image);
+        canvas.Width = photoImage.Width = next?.Photo.Image.Width ?? 0;
+        canvas.Height = photoImage.Height = next?.Photo.Image.Height ?? 0;
+        if (selectStep) SelectResumeStep();
+        if (CurrentStep == CalibrationStep.Plan) EnsureFinePreparation();
+        ClearPreviews(); Refresh(); ((FrameworkElement)Content).UpdateLayout(); FitView(); Draw();
+        if (IsPhotoPage && !IsFitPage)
+            SetStatus("沿实体外缘和真实孔缘各点击 8–16 点，覆盖整圈。滚轮缩放、右键拖动画面；拖动标记可修正。");
+        else SetStatus("当前步骤：" + StepNames[(int)CurrentStep - 1] + "。");
+        if (selectStep && CurrentStep == CalibrationStep.Finish && IsLoaded) _ = ReviewFinalAsync();
+        if (IsPhotoPage && StepReady(CurrentStep) && next?.Session.Rectification is not null && IsLoaded) _ = RefreshPreviews();
     }
-    private void SaveTask()
+    private void SaveTask(PhotoTask? photo)
     {
-        if (task is null || calculation is not null) return;
+        if (photo is null || calculation is not null) return;
         if (draftMask.Count > 0) { SetStatus("请先结束遮罩，或按 Esc 放弃当前遮罩草稿。"); return; }
         var dialog = new SaveFileDialog { Filter = "照片任务包|*.dvdphoto", DefaultExt = ".dvdphoto", OverwritePrompt = false, FileName = "photo-task-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") };
         if (dialog.ShowDialog() != true) return;
-        task.SaveNew(dialog.FileName); dirty = twoDisc is not null; Refresh(); SetStatus("单盘任务包已保存，包含原图、生成记录与标注；两盘关联请另点“保存两盘任务”。");
+        photo.SaveNew(dialog.FileName); dirty = twoDisc is not null; Refresh(); SetStatus("单盘任务包已保存，包含原图、生成记录与标注。");
     }
     private void FitView()
     {
@@ -256,9 +249,12 @@ public sealed partial class MainWindow : Window
         if (p.X < 0 || p.Y < 0 || p.X > task.Photo.Image.Width - 1 || p.Y > task.Photo.Image.Height - 1) return;
         if (mode.SelectedIndex >= 3 && !task.Session.IsConfirmed) { SetStatus("请先计算并确认照片矫正，再描同一条径向线。"); return; }
         var points = CurrentPoints(); selected = -1;
-        double radius = 10 / zoomSlider.Value;
+        double radius = 10 / zoomSlider.Value, nearest = radius * radius;
         for (int i = 0; i < points.Length; i++)
-            if (Math.Pow(points[i].X - p.X, 2) + Math.Pow(points[i].Y - p.Y, 2) < radius * radius) { selected = i; break; }
+        {
+            double dx = points[i].X - p.X, dy = points[i].Y - p.Y, distance = dx * dx + dy * dy;
+            if (distance < nearest) { selected = i; nearest = distance; }
+        }
         if (selected < 0) { SetPoints(points.Add(new(p.X, p.Y))); selected = points.Length; }
         dragging = true; canvas.CaptureMouse(); Draw(); e.Handled = true;
     }
@@ -274,7 +270,7 @@ public sealed partial class MainWindow : Window
     private void DeleteSelected()
     {
         if (calculation is not null) return;
-        var p = CurrentPoints(); if (selected >= 0 && selected < p.Length) { SetPoints(p.RemoveAt(selected)); selected = -1; }
+        var p = CurrentPoints(); if (selected >= 0 && selected < p.Length) { int at = selected; selected = -1; SetPoints(p.RemoveAt(at)); }
     }
     private void UndoPoint()
     {
@@ -294,6 +290,7 @@ public sealed partial class MainWindow : Window
         if (draftMask.Count < 3) { SetStatus("遮罩至少需要 3 个顶点，沿反光区域点击后再结束。"); return; }
         var next = task.Session.WithMasks(task.Session.Masks.Add(new(draftMask.ToImmutableArray())));
         next.Validate(); task.Session = next; draftMask.Clear(); selected = -1; dirty = true; Refresh(); Draw();
+        ClearPreviews(); RefreshWizard();
         if (task.Session.Rectification is not null) _ = RefreshPreviews();
     }
     private void Draw()
@@ -316,10 +313,11 @@ public sealed partial class MainWindow : Window
         if (task.Dense is { } dense)
         {
             var transform = s.GetTransform(); var candidate = dense.Candidates.FirstOrDefault(c => c.Supported);
+            var shift = dense.Wfr?.Centers.FirstOrDefault(c => c.CandidateId == candidate?.Id);
             if (candidate is not null)
                 foreach (double offset in new[] { 0d, Math.PI })
-                    Line(candidate.Curve.Select(p => transform.DiscToSource(new(p.RadiusMm * Math.Cos(p.AngleRadians + offset), p.RadiusMm * Math.Sin(p.AngleRadians + offset)))), Brushes.MediumPurple, false);
-            foreach (var fragment in dense.Observations.Fragments)
+                    Line((dense.Wfr is null ? candidate.Curve : WfrAnalyzer.DisplayCurve(candidate)).Select(p => transform.DiscToSource(new(p.RadiusMm * Math.Cos(p.AngleRadians + offset) - (shift?.XMm ?? 0), p.RadiusMm * Math.Sin(p.AngleRadians + offset) - (shift?.YMm ?? 0)))), Brushes.MediumPurple, false);
+            foreach (var fragment in dense.Wfr is null ? dense.Observations.Fragments : [])
                 Line(fragment.Points.Select(p => transform.DiscToSource(new(p.RadiusMm * Math.Cos(p.PhaseRadians), p.RadiusMm * Math.Sin(p.PhaseRadians)))), Brushes.DeepSkyBlue, false);
         }
         if (task.Fit is { } review)
@@ -412,19 +410,27 @@ public sealed partial class MainWindow : Window
         if (task is null || calculation is not null || !MaskDraftReady()) return;
         task.Session = task.Session.Confirm(); dirty = true; Refresh(); SetStatus("照片矫正已确认，可切换“径向线描点”，沿同一条边界从内向外取点。");
     }
-    public async Task ComputeTraceFit()
+    public async Task ComputeTraceFit(bool automatic = false)
     {
         if (task is null || calculation is not null || !MaskDraftReady()) return;
+        if (automatic && (CurrentStep != CalibrationStep.FineFit || !StepReady(CurrentStep))) return;
         var input = task; var settings = TraceFitSettings.Default with { ShapeOrder = shapeOrder.SelectedIndex };
-        calculation = new(); var token = calculation.Token; Refresh(); SetStatus("正在按连续角度拟合；主线外侧 25% 与对侧线不参与优化，可取消……");
+        if (automatic && !input.Session.Traces.IsEmpty && MessageBox.Show(this, "重新自动描线会替换当前描点。继续？", "自动描线",
+            MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        calculation = new(); var token = calculation.Token; Refresh();
+        SetStatus(automatic ? "正在识别对侧十字臂并拟合曲线……" : "正在拟合曲线并检查留出点……");
         try
         {
-            var review = await Task.Run(() => input.FitTrace(settings, token), token);
+            var (observations, review) = await Task.Run(() => automatic
+                ? input.FitCrossAutomatically(settings, token) : (input.Session, input.FitTrace(settings, token)), token);
             token.ThrowIfCancellationRequested();
+            if (automatic) { input.Session = observations; selected = -1; mode.SelectedIndex = 3; }
             input.AttachFit(review); dirty = true; Draw();
-            SetStatus(review.Selected.EligibleForReview
+            string message = review.Selected.EligibleForReview
                 ? "拟合完成。橙线为完整模型预测；请检查点间走向与留出区域，确认没有漏圈或换臂后再确认候选。"
-                : CalibrationGuidance.Describe(CalibrationGuidance.ForTrace(review)));
+                : CalibrationGuidance.Describe(CalibrationGuidance.ForTrace(review));
+            if (automatic) message += " 请自行删除偏差较大的点，修改后点“拟合描线”。";
+            SetStatus(message);
         }
         catch (OperationCanceledException) { SetStatus("描线拟合已取消，照片、观测和原有候选保留。"); }
         catch (Exception e) when (Expected(e)) { SetStatus(CalibrationGuidance.Describe(e)); }
@@ -496,7 +502,8 @@ public sealed partial class MainWindow : Window
     private void Refresh()
     {
         bool busy = calculation is not null;
-        fitButton.IsEnabled = task is not null && !busy && draftMask.Count == 0; saveButton.IsEnabled = task is not null && !busy && draftMask.Count == 0;
+        fitButton.IsEnabled = task is not null && !busy && draftMask.Count == 0;
+        saveButton.IsEnabled = (task is not null || twoDisc is not null && PlanCurrent) && !busy && draftMask.Count == 0;
         confirmButton.IsEnabled = task?.Session.Rectification is not null && rectified.Source is not null && !busy && !task.Session.IsConfirmed && draftMask.Count == 0;
         cancelButton.IsEnabled = busy;
         mode.IsEnabled = !busy;
@@ -507,15 +514,15 @@ public sealed partial class MainWindow : Window
         var dense = task?.Dense; var best = dense?.Candidates.FirstOrDefault(c => c.Supported);
         denseDetail.Text = dense is null ? "密环入口：已知解析半盘靶，可联合局部主边界描线。" :
             $"{DenseState(dense.QualityStatus)} · 片段 {dense.Observations.Fragments.Length} · 有效径向 {dense.Observations.UsableRadialFraction:P0}\n"
-            + (best is null ? CalibrationGuidance.Describe(CalibrationGuidance.ForDense(dense)) : $"ri {best.Parameters.InnerRadiusMm:F6} / ro {best.Parameters.OuterRadiusMm:F6} mm\n图像训练/留出 {best.TrainingImageError:F3} / {best.HoldoutImageError:F3} · 相位留出 {best.HoldoutPhaseRmsRadians:F3} rad\n{DenseState(dense.NextDisc?.Status ?? "photo-insufficient")}；实刻待验证。");
-        if (task is null) { counts.Text = "未导入照片"; detail.Text = "1  打开冻结生成快照并导入照片\n2  标外缘/孔缘并确认矫正\n3  连续边界可描线拟合\n4  已知半盘可分析密环或混合观测\n5  核对报告、候选与完整预测"; return; }
+            + (best is null ? CalibrationGuidance.Describe(CalibrationGuidance.ForDense(dense)) : $"ri {best.Parameters.InnerRadiusMm:F6} / ro {best.Parameters.OuterRadiusMm:F6} mm\n{(dense.Wfr is null ? "图像训练/留出" : "WFR 法向误差训练/留出 (mm)")} {best.TrainingImageError:F3} / {best.HoldoutImageError:F3} · 相位留出 {best.HoldoutPhaseRmsRadians:F3} rad\n{DenseState(dense.NextDisc?.Status ?? "photo-insufficient")}；实刻待验证。");
+        if (task is null) { counts.Text = "未导入照片"; detail.Text = "先准备生成记录和记录面原图。"; RefreshWizard(); return; }
         var s = task.Session;
         counts.Text = $"外缘 {s.OuterBoundary.Length} 点  ·  孔缘 {s.HoleBoundary.Length} 点  ·  遮罩 {s.Masks.Length} 处  ·  描线 {s.Traces.Sum(t => t.Points.Length)} 点"
             + (draftMask.Count > 0 ? $"  ·  遮罩草稿 {draftMask.Count} 点（未应用）" : "");
         detail.Text = $"原图 {s.Photo.OriginalWidth} × {s.Photo.OriginalHeight}  →  定向后 {s.Photo.OrientedWidth} × {s.Photo.OrientedHeight}\nEXIF 方向 {s.Photo.AppliedExifOrientation}  ·  缩放 {zoomSlider.Value:P0}\n观察面约定：记录面\n快照 {s.SnapshotId}\n"
             + (s.Rectification is null ? "待计算联合矫正" : $"外缘 RMS {s.Rectification.OuterRmsPixels:F3} px  ·  孔缘 RMS {s.Rectification.HoleRmsPixels:F3} px\n" + (s.IsConfirmed ? "矫正已确认" : "待核对确认"))
             + "\n\n遮罩在原图上绘制多边形后点击“结束遮罩”。\n极坐标左→右：0°→360°（逆时针）；上→下：生成内半径→外半径。\n照片矫正不会消除镜头畸变。";
-        Title = "DVD Calibrator · 照片标注与矫正" + (dirty ? " *" : "");
+        RefreshWizard();
     }
     private static string DenseState(string status) => status switch
     {

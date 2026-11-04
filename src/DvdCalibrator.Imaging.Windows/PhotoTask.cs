@@ -6,35 +6,59 @@ using DvdCalibrator.Core;
 
 namespace DvdCalibrator.Imaging.Windows;
 
-public sealed class SnapshotBundle
+public sealed partial class SnapshotBundle : IHalfDiscGeneration
 {
     public Dictionary<string, byte[]> Files { get; }
     public string Id { get; }
     public string Hash { get; }
     public GeometryParameters Geometry { get; }
+    public GeometryParameters Generated => Geometry;
+    public string ContentSha256 => Hash;
+    private PatternDefinition? pattern;
+    public PatternDefinition Pattern => pattern ?? throw new ArgumentException("当前记录不是已核对源图的黑白半盘靶。");
+    IReadOnlyDictionary<string, byte[]> IHalfDiscGeneration.ExportFiles() => Files;
+    public void Validate()
+    {
+        var current = new SnapshotBundle(Files);
+        if (current.Hash != Hash || current.Id != Id || current.Geometry != Geometry)
+            throw new ArgumentException("导入记录已改变，请重新提交材料。");
+    }
     public SnapshotBundle(Dictionary<string, byte[]> files)
     {
         Files = files;
         string json = Encoding.UTF8.GetString(files["generation.json"]).TrimStart('\uFEFF');
         using var document = RecordJson.ParseDocument(json);
-        switch (document.RootElement.GetProperty("recordType").GetString())
+        if (!document.RootElement.TryGetProperty("recordType", out var recordType)) throw new ArgumentException(RecordSelectionHelp);
+        switch (recordType.GetString())
         {
             case "generation-snapshot":
                 var s = RecordJson.Parse<GenerationSnapshot>(json); s.Validate();
                 Id = s.Id; Hash = s.ContentSha256; Geometry = s.Generated;
+                pattern = s.Pattern;
                 if (files.Count != 1) throw new ArgumentException("合成快照包含未定义附件。");
                 break;
             case "external-generation-snapshot":
                 var e = RecordJson.Parse<ExternalGenerationSnapshot>(json); e.ValidateAttachments(name => files[name]);
                 Id = e.Id; Hash = e.ContentSha256; Geometry = e.GenerationRecord.Generated;
+                if (e.BinaryHalfDisc)
+                {
+                    HalfDiscSource.Validate(files[e.SourceImageFile]);
+                    string id = e.Declarations.EvidenceSource == GenerationDeclarations.BuiltInHalfDisc ? GenerationDeclarations.BuiltInHalfDisc : "submitted-half-disc";
+                    pattern = new(id, "half-disc", .25, "analytic-disc-xy-v1");
+                }
                 if (files.Count != 3) throw new ArgumentException("外部生成快照包含未定义附件。");
+                break;
+            case "upstream-calibration-generation":
+                var calibration = RecordJson.Parse<CalibrationGeneration>(json); calibration.ValidateAttachments(name => files[name]);
+                Id = calibration.Id; Hash = calibration.ContentSha256; Geometry = calibration.Generated;
+                if (files.Count != 2) throw new ArgumentException("辅助标定记录包含未定义附件。");
                 break;
             case "reference-target-simulation":
                 var simulation = RecordJson.Parse<ReferenceTargetSimulation>(json); simulation.Validate();
                 Id = simulation.Id; Hash = simulation.ContentSha256; Geometry = simulation.Generated;
                 if (files.Count != 1) throw new ArgumentException("参考靶模拟快照包含未定义附件。");
                 break;
-            default: throw new ArgumentException("请选择第一阶段冻结的 generation.json。");
+            default: throw new ArgumentException(RecordSelectionHelp);
         }
     }
     public static SnapshotBundle Load(string path)
@@ -42,7 +66,8 @@ public sealed class SnapshotBundle
         if (new FileInfo(path).Length > RecordJson.MaxBytes) throw new ArgumentException("生成快照过大。");
         var files = new Dictionary<string, byte[]>(StringComparer.Ordinal) { ["generation.json"] = File.ReadAllBytes(path) };
         using var doc = RecordJson.ParseDocument(File.ReadAllText(path));
-        if (doc.RootElement.GetProperty("recordType").GetString() == "external-generation-snapshot")
+        if (!doc.RootElement.TryGetProperty("recordType", out var recordType)) throw new ArgumentException(RecordSelectionHelp);
+        if (recordType.GetString() == "external-generation-snapshot")
         {
             var e = RecordJson.Read<ExternalGenerationSnapshot>(path);
             e.Validate(Path.GetDirectoryName(Path.GetFullPath(path))!);
@@ -53,8 +78,11 @@ public sealed class SnapshotBundle
                 files[name] = File.ReadAllBytes(asset);
             }
         }
+        else if (recordType.GetString() == "upstream-calibration-generation")
+            files["source.json"] = ReadLimited(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path))!, "source.json"), RecordJson.MaxBytes);
         return new(files);
     }
+    private const string RecordSelectionHelp = "请选择整理后的 generation.json。原始 .iso.json 需要先按“新手教程”整理；原项目的 .calibration.json 目前尚未支持，不能改名代替。";
 }
 
 public sealed class PhotoTask
@@ -93,21 +121,38 @@ public sealed class PhotoTask
     public void AttachFit(TraceFitReview review)
     { review.Validate(Snapshot.Geometry, Snapshot.Hash, Session); Fit = review; }
     public void ClearFit() => Fit = null;
-    public GenerationSnapshot AnalyticSnapshot()
+    public IHalfDiscGeneration AnalyticSnapshot()
     {
-        using var doc = RecordJson.ParseDocument(Encoding.UTF8.GetString(Snapshot.Files["generation.json"]).TrimStart('\uFEFF'));
-        if (doc.RootElement.GetProperty("recordType").GetString() != "generation-snapshot")
-            throw new ArgumentException("密环分析需要明确的解析半盘靶快照，当前外部图片的靶型未定义。请使用描线入口。");
-        return RecordJson.Parse<GenerationSnapshot>(doc.RootElement.GetRawText());
+        if (Snapshot.Pattern.Kind != "half-disc") throw new ArgumentException("粗调识别需要已核对的黑白半盘源图。");
+        return Snapshot;
     }
     public DenseAnalysis AnalyzeDense(DenseSettings? settings = null, CancellationToken token = default)
-    { Validate(); return DenseAnalyzer.Analyze(AnalyticSnapshot(), Session, Photo.Image, settings, token); }
+    {
+        Validate(); var snapshot = AnalyticSnapshot();
+        var result = DenseAnalyzer.Analyze(snapshot, Session, Photo.Image, settings, token);
+        if (settings is null && !result.Candidates.Any(c => c.Supported)) return WfrAnalyzer.Analyze(snapshot, Session, Photo.Image, token);
+        return result;
+    }
     public void AttachDense(DenseAnalysis result)
     { result.Verify(AnalyticSnapshot(), Session, Photo.Image); Dense = result; }
     public TraceFitReview FitTrace(TraceFitSettings? settings = null, CancellationToken token = default)
     {
         Validate();
-        var result = TraceFitter.Fit(Snapshot.Geometry, Snapshot.Hash, Session, settings, token);
+        return FitTrace(Session, settings, token);
+    }
+
+    public (PhotoSession Session, TraceFitReview Review) FitCrossAutomatically(TraceFitSettings? settings = null, CancellationToken token = default)
+    {
+        Validate();
+        var traced = Session.WithTraces(AutoCrossTrace.Extract(Photo.Image, Session, Snapshot.Geometry, token));
+        var review = FitTrace(traced, settings, token);
+        review.Validate(Snapshot.Geometry, Snapshot.Hash, traced);
+        return (traced, review);
+    }
+
+    private TraceFitReview FitTrace(PhotoSession observations, TraceFitSettings? settings, CancellationToken token)
+    {
+        var result = TraceFitter.Fit(Snapshot.Geometry, Snapshot.Hash, observations, settings, token);
         return new(result, result.Candidates.FirstOrDefault(c => c.EligibleForReview)?.Id ?? result.Candidates[0].Id, null);
     }
 

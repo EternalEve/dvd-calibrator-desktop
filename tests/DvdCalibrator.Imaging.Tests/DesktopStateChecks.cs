@@ -67,23 +67,18 @@ internal static class DesktopStateChecks
         content.Measure(new Size(1380, 1000)); content.Arrange(new Rect(0, 0, 1380, 1000)); content.UpdateLayout();
         window.LoadPhotoTask(task); return window;
     }
-    private static IEnumerable<DependencyObject> Descendants(object parent)
-    {
-        if (parent is not DependencyObject d) yield break;
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(d); i++)
-        { var child = VisualTreeHelper.GetChild(d, i); yield return child; foreach (var nested in Descendants(child)) yield return nested; }
-    }
+    private static IEnumerable<DependencyObject> Descendants(object parent) => parent is DependencyObject d ? WizardChecks.Nodes(d) : [];
     private static Button Button(MainWindow window, string name) => Descendants(window.Content).OfType<Button>().Single(b => Equals(b.Content, name));
     private static void Click(MainWindow window, string name) => Button(window, name).RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
     private static object? Invoke(MainWindow window, string method, params object[] args)
         => typeof(MainWindow).GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(window, args);
-    private static void WithDispatcher(Action action)
+    internal static void WithDispatcher(Action action)
     {
         var previous = SynchronizationContext.Current;
         SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
         try { action(); } finally { SynchronizationContext.SetSynchronizationContext(previous); }
     }
-    private static void Pump(Task task)
+    internal static void Pump(Task task)
     {
         var dispatcher = Dispatcher.CurrentDispatcher; var frame = new DispatcherFrame(); bool timedOut = false;
         var timer = new DispatcherTimer(DispatcherPriority.Send) { Interval = TimeSpan.FromSeconds(30) };

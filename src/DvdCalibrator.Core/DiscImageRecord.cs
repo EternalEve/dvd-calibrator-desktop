@@ -27,7 +27,7 @@ public static class DiscImageRecord
         return ReadBytes(sourceBytes);
     }
 
-    public static ImportedGenerationRecord ReadBytes(byte[] sourceBytes)
+    public static ImportedGenerationRecord ReadBytes(byte[] sourceBytes, bool allowBinaryTone = false)
     {
         if (sourceBytes.Length > RecordJson.MaxBytes) throw new ArgumentException("记录超过 4 MB 限制。");
         using var document = RecordJson.ParseDocument(Encoding.UTF8.GetString(sourceBytes).TrimStart('\uFEFF'));
@@ -40,7 +40,7 @@ public static class DiscImageRecord
             throw new ArgumentException("生成映射含未知字段，需要新的适配器版本。");
         // Require the field even when null: absence is not equivalent to an explicitly recorded legacy tone.
         var tone = mapping.GetProperty("tone");
-        if (tone.ValueKind != JsonValueKind.Null)
+        if (tone.ValueKind != JsonValueKind.Null && (!allowBinaryTone || !BinaryTonePreservesEndpoints(tone)))
             throw new ArgumentException("首版尚不支持 tone 变换；不能将其静默当作无抖动输入。");
         var parameters = new GeometryParameters(mapping.GetProperty("innerRadiusMm").GetDouble(),
             mapping.GetProperty("outerRadiusMm").GetDouble(), mapping.GetProperty("totalSectors").GetInt64(),
@@ -71,5 +71,14 @@ public static class DiscImageRecord
             parameters, startAngle, luminance, alpha, root.Clone(), "record-incomplete",
             ["media-type-and-real-capacity-confirmation", "source-image-bytes-and-sha256",
              "generator-executable-version-and-commit", "image-preprocessing-and-sampling-confirmation"]);
+    }
+
+    // The GUI's default dither/gamma preserve opaque 0/255 endpoints when brightness is zero.
+    // This exception is only for a separately verified binary half-disc source.
+    private static bool BinaryTonePreservesEndpoints(JsonElement tone)
+    {
+        var profile = tone.Deserialize<DiscImageStudio.Core.ToneProfile>(RecordJson.Options);
+        profile.Validate();
+        return profile.Levels == 2 && profile.Brightness == 0;
     }
 }

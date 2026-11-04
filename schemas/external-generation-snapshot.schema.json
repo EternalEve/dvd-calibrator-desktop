@@ -180,6 +180,10 @@
     },
     "contentSha256": {
       "type": "string"
+    },
+    "binaryHalfDisc": {
+      "type": "boolean",
+      "default": false
     }
   },
   "required": [

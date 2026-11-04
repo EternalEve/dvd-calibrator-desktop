@@ -5,11 +5,11 @@ namespace DvdCalibrator.Core;
 /// <summary>Known analytic half-disc only. Angular harmonics resolve phase sign; each radial fragment keeps one turn branch.</summary>
 public static class DenseAnalyzer
 {
-    internal sealed record Input(GenerationSnapshot Snapshot, PhotoSession Session, DenseSettings Settings,
+    internal sealed record Input(IHalfDiscGeneration Snapshot, PhotoSession Session, DenseSettings Settings,
         DenseObservations Observations, double[,,] Samples, ImmutableArray<TraceDatum> Traces);
     private const double Tau = 2 * Math.PI;
 
-    public static DenseAnalysis Analyze(GenerationSnapshot snapshot, PhotoSession session, RgbImage image,
+    public static DenseAnalysis Analyze(IHalfDiscGeneration snapshot, PhotoSession session, RgbImage image,
         DenseSettings? settings = null, CancellationToken token = default)
     {
         var input = Extract(snapshot, session, image, settings ?? DenseSettings.Default, token);
@@ -119,7 +119,7 @@ public static class DenseAnalyzer
         return Finish(input, candidates.OrderBy(c => c.TrainingImageError + c.TrainingPhaseRmsRadians).ToImmutableArray());
     }
 
-    internal static Input Extract(GenerationSnapshot snapshot, PhotoSession session, RgbImage image, DenseSettings settings, CancellationToken token)
+    internal static Input Extract(IHalfDiscGeneration snapshot, PhotoSession session, RgbImage image, DenseSettings settings, CancellationToken token)
     {
         snapshot.Validate(); session.Validate(); settings.Validate(); token.ThrowIfCancellationRequested();
         if (snapshot.Pattern.Kind != "half-disc" || session.SnapshotId != snapshot.Id || session.SnapshotSha256 != snapshot.ContentSha256

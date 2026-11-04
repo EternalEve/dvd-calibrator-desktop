@@ -22,7 +22,7 @@ try {
         $publishArgs = @('publish', "src/DvdCalibrator.$project", '-c', 'Release', '-r', 'win-x64', '--self-contained', 'true',
             "-p:RuntimeFrameworkVersion=$runtimeVersion", "-p:RestorePackagesPath=$packages",
             '-p:NuGetAudit=false', '-p:PublishTrimmed=false', '-p:PublishSingleFile=false', '-o', $publish, '--nologo')
-        if ($RuntimeSource) { $publishArgs += @('--source', $RuntimeSource) }
+        if ($RuntimeSource) { $publishArgs += @('--source', (Join-Path $projectRoot 'third_party/MathNet'), '--source', $RuntimeSource) }
         & dotnet @publishArgs
         if ($LASTEXITCODE -ne 0) { throw "$project publish failed. Runtime packs may need an explicit -RuntimeSource on first use." }
         foreach ($file in Get-ChildItem -LiteralPath $publish -Recurse -File) {
@@ -43,13 +43,21 @@ try {
             }
         }
     }
-    foreach ($required in @('DvdCalibrator.App.exe', 'DvdCalibrator.Cli.exe', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll', 'PresentationFramework.Fluent.dll', 'wpfgfx_cor3.dll')) {
+    foreach ($required in @('DvdCalibrator.App.exe', 'DvdCalibrator.Cli.exe', 'MathNet.Numerics.dll', 'coreclr.dll', 'hostfxr.dll', 'PresentationFramework.dll', 'PresentationFramework.Fluent.dll', 'wpfgfx_cor3.dll', '新手教程.html', '标定原图/target_slim.png')) {
         if (-not (Test-Path -LiteralPath (Join-Path $payload $required))) { throw "Missing payload file: $required" }
     }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination (Join-Path $payload 'LICENSE')
     Copy-Item -LiteralPath (Join-Path $projectRoot 'THIRD-PARTY-NOTICES.md') -Destination $payload
     Copy-Item -LiteralPath (Join-Path $projectRoot 'CHANGELOG.md') -Destination $payload
+    foreach ($dependency in @('MathNet', 'pyGPA')) {
+        $licenseFolder = Join-Path $payload "licenses/$dependency"
+        $null = New-Item -ItemType Directory -Path $licenseFolder -Force
+        $licenseName = if ($dependency -eq 'MathNet') { 'LICENSE.md' } else { 'LICENSE' }
+        Copy-Item -LiteralPath (Join-Path $projectRoot "third_party/$dependency/$licenseName") -Destination $licenseFolder
+    }
     Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/portable-quickstart.md') -Destination (Join-Path $payload '使用说明.md')
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/guided-workflow.md') -Destination (Join-Path $payload '分步教程.md')
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'docs/material-preparation.md') -Destination (Join-Path $payload '生成记录说明.md')
     foreach ($pack in @('microsoft.netcore.app.runtime.win-x64', 'microsoft.windowsdesktop.app.runtime.win-x64')) {
         $packRoot = Join-Path $packages "$pack/$runtimeVersion"
         $legal = @(Get-ChildItem -LiteralPath $packRoot -Recurse -File | Where-Object Name -Match '^(LICENSE|THIRD.PARTY.NOTICES|ThirdPartyNotices)(\..*)?$')

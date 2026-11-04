@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup><PackageReference Include="MathNet.Numerics" Version="5.0.0" /></ItemGroup>
   <ItemGroup>
     <Compile Include="../../third_party/DiscImageStudio/DvdTrackGeometry.cs" Link="Upstream/DvdTrackGeometry.cs" />
     <Compile Include="../../third_party/DiscImageStudio/CalibrationPhotoRectifier.cs" Link="Upstream/CalibrationPhotoRectifier.cs" />

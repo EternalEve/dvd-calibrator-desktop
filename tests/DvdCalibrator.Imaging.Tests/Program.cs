@@ -24,6 +24,8 @@ internal static class Program
         }
         var demo = SyntheticPhoto.Create();
         var traceDemo = SyntheticPhoto.CreateTraceDemo();
+        PhotoOrientationChecks.Register(Test, output);
+        WfrChecks.Register(Test, output, root);
         Test("corrupt photos are rejected without creating a task", () =>
         {
             try { PhotoCodec.ImportBytes("not an image"u8.ToArray()); throw new Exception("Corrupt photo accepted"); }
@@ -187,7 +189,7 @@ internal static class Program
                 }
             }
             var objects = Descendants(content).ToArray();
-            var diagnostic = objects.OfType<System.Windows.Controls.TextBlock>().Single(t => t.Name == "DenseDiagnostic");
+            var diagnostic = WizardChecks.Nodes(content).OfType<System.Windows.Controls.TextBlock>().Single(t => t.Name == "DenseDiagnostic");
             Check(diagnostic.Text.Contains("下一张预测待核对", StringComparison.Ordinal), "next-disc status not displayed");
             var canvas = objects.OfType<System.Windows.Controls.Canvas>().Single(c => c.Name == "SourcePixelCanvas");
             Check(canvas.Children.OfType<System.Windows.Shapes.Polyline>().Any(p => p.Stroke == Brushes.MediumPurple), "dense full-model overlay missing");
@@ -197,6 +199,8 @@ internal static class Program
             using var stream = File.Create(Path.Combine(output, "dense-desktop.png")); encoder.Save(stream);
         });
         TwoDiscChecks.Register(Test, output);
+        ManualWorkflowChecks.Register(Test, output, root);
+        WizardChecks.Register(Test, output);
         DesktopStateChecks.Register(Test, traceDemo);
         Console.WriteLine($"{passed}/{total} Windows imaging checks passed. Artifacts: {output}");
         return passed == total ? 0 : 1;

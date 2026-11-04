@@ -4,9 +4,11 @@ namespace DvdCalibrator.Core;
 
 public sealed record DiscSpec(string MediaType, double DiameterMm, double HoleDiameterMm, int Layers, string? Mid)
 {
+    public static DiscSpec UnspecifiedDvd { get; } = new("DVD", 120, 15, 1, null);
+
     public void Validate()
     {
-        if (MediaType is not ("DVD-R" or "DVD+R") || DiameterMm != 120 || HoleDiameterMm != 15 || Layers != 1)
+        if (this != UnspecifiedDvd && (MediaType is not ("DVD-R" or "DVD+R") || DiameterMm != 120 || HoleDiameterMm != 15 || Layers != 1))
             throw new ArgumentException("首版只接受 120/15 mm 单层 DVD-R 或 DVD+R。");
     }
 }
@@ -39,10 +41,23 @@ public sealed record GeneratorInfo(string Name, string Version, string SourceKin
     }
 }
 
+public interface IHalfDiscGeneration
+{
+    string Id { get; }
+    string ContentSha256 { get; }
+    GeometryParameters Generated { get; }
+    PatternDefinition Pattern { get; }
+    void Validate();
+    IReadOnlyDictionary<string, byte[]> ExportFiles();
+}
+
 public sealed record GenerationSnapshot(int SchemaVersion, string RecordType, string Id, string State,
     DiscSpec Disc, GeometryParameters Generated, PatternDefinition Pattern, GeneratorInfo Generator,
-    string ContentSha256)
+    string ContentSha256) : IHalfDiscGeneration
 {
+    IReadOnlyDictionary<string, byte[]> IHalfDiscGeneration.ExportFiles() => new Dictionary<string, byte[]>
+    { ["generation.json"] = System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(this, RecordJson.Options) };
+
     public static GenerationSnapshot CreateSynthetic(string id, DiscSpec disc, GeometryParameters generated,
         PatternDefinition pattern)
     {

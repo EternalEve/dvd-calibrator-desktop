@@ -11,15 +11,22 @@ public sealed record FineTargetForecast(double InnerRadiusMm, double OuterRadius
     double MinimumArmSpacingPixels, double MinimumLineWidthPixels, string Status, ImmutableArray<FineForecastCurve> Curves);
 
 public sealed record FineTargetPlan(int SchemaVersion, string RecordType, string Id, DiscSpec Disc,
-    CoarsePlanEvidence Coarse, GeometryParameters Generated, ReferenceTargetContract Target,
+    CoarsePlanEvidence? Coarse, GeometryParameters Generated, ReferenceTargetContract Target,
     double ExpectedPhotoPixelsPerMm, FineTargetForecast Forecast, string PhysicalValidation,
     string ContentSha256, string? ConfirmedPlanSha256)
 {
     public static FineTargetPlan Create(DiscSpec disc, CoarsePlanEvidence coarse, double expectedPixelsPerMm)
     {
-        var plan = new FineTargetPlan(1, "fine-target-plan", Guid.NewGuid().ToString("N"), disc, coarse,
-            coarse.Parameters, ReferenceTargetContract.Default, expectedPixelsPerMm,
-            Predict(coarse, expectedPixelsPerMm), "pending", "", null);
+        return Create(disc, coarse.Parameters, coarse, expectedPixelsPerMm);
+    }
+    public static FineTargetPlan CreateManual(DiscSpec disc, GeometryParameters generated, double expectedPixelsPerMm)
+        => Create(disc, generated, null, expectedPixelsPerMm);
+
+    private static FineTargetPlan Create(DiscSpec disc, GeometryParameters generated, CoarsePlanEvidence? coarse, double expectedPixelsPerMm)
+    {
+        var plan = new FineTargetPlan(coarse is null ? 2 : 1, "fine-target-plan", Guid.NewGuid().ToString("N"), disc, coarse,
+            generated, ReferenceTargetContract.Default, expectedPixelsPerMm,
+            Predict(generated, coarse, expectedPixelsPerMm), "pending", "", null);
         plan = plan with { ContentSha256 = plan.Hash() }; plan.Validate(); return plan;
     }
     private string Hash() => RecordJson.Hash(this with { ContentSha256 = "", ConfirmedPlanSha256 = null });
@@ -33,51 +40,68 @@ public sealed record FineTargetPlan(int SchemaVersion, string RecordType, string
     public void Validate()
     {
         Disc.Validate(); Generated.Validate(); Target.Validate();
-        if (SchemaVersion != 1 || RecordType != "fine-target-plan" || !Guid.TryParseExact(Id, "N", out _)
-            || PhysicalValidation != "pending" || Coarse.Kind is not ("trace" or "dense")
-            || !RecordJson.IsHash(Coarse.SnapshotSha256) || !RecordJson.IsHash(Coarse.SessionSha256) || !RecordJson.IsHash(Coarse.ResultSha256)
-            || string.IsNullOrWhiteSpace(Coarse.SelectedCandidateId) || Generated != Coarse.Parameters
+        if (SchemaVersion != (Coarse is null ? 2 : 1) || RecordType != "fine-target-plan" || !Guid.TryParseExact(Id, "N", out _)
+            || PhysicalValidation != "pending"
             || Generated.TotalSectors % 16 != 0
             || !double.IsFinite(ExpectedPhotoPixelsPerMm) || ExpectedPhotoPixelsPerMm is < 1 or > 500
-            || Coarse.Alternatives.IsDefaultOrEmpty || Coarse.Alternatives.Length > 8
-            || Coarse.Alternatives.Any(c => c is null || string.IsNullOrWhiteSpace(c.Id))
-            || Coarse.Alternatives.Select(c => c.Id).Distinct().Count() != Coarse.Alternatives.Length
-            || !Coarse.Alternatives.Any(c => c.Id == Coarse.SelectedCandidateId && c.Parameters == Generated)
             || ContentSha256 != Hash() || (ConfirmedPlanSha256 is not null && (!IsConfirmed || Forecast.Status != "plan-review")))
-            throw new ArgumentException("精调计划版本、参数、粗调证据或确认绑定无效。");
-        foreach (var c in Coarse.Alternatives)
+            throw new ArgumentException("精调计划版本、参数或确认绑定无效。");
+        if (Coarse is { } coarse) ValidateCoarse(coarse);
+        if (RecordJson.Hash(Predict(Generated, Coarse, ExpectedPhotoPixelsPerMm)) != RecordJson.Hash(Forecast))
+            throw new ArgumentException("下一张预测已脱离完整候选模型。");
+    }
+
+    private void ValidateCoarse(CoarsePlanEvidence coarse)
+    {
+        if (coarse.Kind is not ("trace" or "dense") || Generated != coarse.Parameters
+            || !RecordJson.IsHash(coarse.SnapshotSha256) || !RecordJson.IsHash(coarse.SessionSha256) || !RecordJson.IsHash(coarse.ResultSha256)
+            || coarse.Alternatives.IsDefaultOrEmpty || coarse.Alternatives.Length > 8
+            || coarse.Alternatives.Any(c => c is null || string.IsNullOrWhiteSpace(c.Id))
+            || coarse.Alternatives.Select(c => c.Id).Distinct().Count() != coarse.Alternatives.Length
+            || !coarse.Alternatives.Any(c => c.Id == coarse.SelectedCandidateId && c.Parameters == Generated))
+            throw new ArgumentException("粗调证据或候选无效。");
+        foreach (var c in coarse.Alternatives)
         {
             c.Parameters.Validate();
             if (c.Parameters.TotalSectors != Generated.TotalSectors || c.Parameters.ChannelBitLengthNm != Generated.ChannelBitLengthNm
                 || c.Parameters.Direction != Generated.Direction) throw new ArgumentException("候选不共享位长、容量和方向条件。");
         }
-        if (RecordJson.Hash(Predict(Coarse, ExpectedPhotoPixelsPerMm)) != RecordJson.Hash(Forecast))
-            throw new ArgumentException("下一张预测已脱离完整候选模型。");
     }
 
     public void VerifyActualGeneration(ExternalGenerationSnapshot snapshot, Func<string, byte[]> read)
     {
         Validate(); snapshot.ValidateAttachments(read);
         var r = snapshot.GenerationRecord;
-        if (!IsConfirmed || snapshot.Declarations.Disc != Disc || r.Generated != Generated
-            || snapshot.SourceImageSha256 != Target.PngSha256 || snapshot.Declarations.GeneratorCommit != Target.UpstreamCommit
-            || snapshot.Declarations.GeneratorVersion != "1.3.6" || r.StartAngleDegrees != Target.StartAngleDegrees
+        if (!IsConfirmed || !MatchesDisc(snapshot.Declarations.Disc) || r.Generated != Generated
+            || snapshot.SourceImageSha256 != Target.PngSha256
+            || (snapshot.Declarations.EvidenceSource != "manual-import" && (snapshot.Declarations.GeneratorCommit != Target.UpstreamCommit
+                || snapshot.Declarations.GeneratorVersion != "1.3.6")) || r.StartAngleDegrees != Target.StartAngleDegrees
             || r.LuminanceThreshold != Target.LuminanceThreshold || r.AlphaThreshold != Target.AlphaThreshold
             || r.OriginalRecord.GetProperty("psnOffset").GetString() != Target.PsnOffset
             || r.OriginalRecord.GetProperty("imageMapping").GetProperty("sampleEveryChannelBits").GetInt32() != Target.SampleEveryChannelBits)
             throw new CalibrationInputException("fine-generation-mismatch", "第二张实际生成记录不匹配已确认 G1、标靶字节或生成契约；不能沿用 G0 或模拟记录。");
     }
 
-    private static FineTargetForecast Predict(CoarsePlanEvidence evidence, double pixelsPerMm)
+    public void VerifyCalibrationGeneration(CalibrationGeneration snapshot, Func<string, byte[]> read)
     {
-        if (!double.IsFinite(pixelsPerMm) || pixelsPerMm is < 1 or > 500 || evidence.Alternatives.IsDefaultOrEmpty || evidence.Alternatives.Length > 8)
+        Validate(); snapshot.ValidateAttachments(read);
+        if (!IsConfirmed || !MatchesDisc(snapshot.Disc) || snapshot.Generated != Generated)
+            throw new CalibrationInputException("fine-generation-mismatch", "辅助标定盘的实际参数与第 4 页选用的参数不一致，请核对第 4 页参数和实际生成记录。");
+    }
+
+    private bool MatchesDisc(DiscSpec actual) => Disc == DiscSpec.UnspecifiedDvd || actual == Disc;
+
+    private static FineTargetForecast Predict(GeometryParameters p1, CoarsePlanEvidence? evidence, double pixelsPerMm)
+    {
+        const string manualId = "manual-parameters";
+        ImmutableArray<CoarseAlternative> alternatives = evidence?.Alternatives ?? [new(manualId, p1)];
+        if (!double.IsFinite(pixelsPerMm) || pixelsPerMm is < 1 or > 500 || alternatives.IsDefaultOrEmpty || alternatives.Length > 8)
             throw new ArgumentException("预计精调照片像素/mm 或候选数量无效。");
-        var p1 = evidence.Parameters;
-        double lo = Math.Max(p1.InnerRadiusMm, evidence.Alternatives.Max(c => c.Parameters.InnerRadiusMm)) + .5;
-        double hi = Math.Min(p1.OuterRadiusMm, evidence.Alternatives.Min(c => c.Parameters.OuterRadiusMm)) - .5;
+        double lo = Math.Max(p1.InnerRadiusMm, alternatives.Max(c => c.Parameters.InnerRadiusMm)) + .5;
+        double hi = Math.Min(p1.OuterRadiusMm, alternatives.Min(c => c.Parameters.OuterRadiusMm)) - .5;
         if (hi - lo < 10) throw new ArgumentException("精调预测的共同有效域不足 10 mm。");
         var curves = ImmutableArray.CreateBuilder<FineForecastCurve>(); double armPixels = 1e9, widthPixels = 1e9;
-        foreach (var c in evidence.Alternatives)
+        foreach (var c in alternatives)
         {
             var model = new ForwardModel(p1, c.Parameters);
             var curve = Enumerable.Range(0, 1025).Select(i => { double r = lo + (hi - lo) * i / 1024; return new TraceCurvePoint(r, model.AtRadius(r).PhaseRadians); }).ToImmutableArray();
@@ -91,7 +115,7 @@ public sealed record FineTargetPlan(int SchemaVersion, string RecordType, string
             }
             curves.Add(new(c.Id, curve));
         }
-        var selected = curves.First(c => c.CandidateId == evidence.SelectedCandidateId).Curve; double difference = 0;
+        var selected = curves.First(c => c.CandidateId == (evidence?.SelectedCandidateId ?? manualId)).Curve; double difference = 0;
         foreach (var curve in curves)
         {
             double shift = curve.Curve[0].AngleRadians - selected[0].AngleRadians;

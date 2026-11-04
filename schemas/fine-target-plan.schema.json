@@ -42,7 +42,10 @@
       "additionalProperties": false
     },
     "coarse": {
-      "type": "object",
+      "type": [
+        "object",
+        "null"
+      ],
       "properties": {
         "kind": {
           "type": "string"

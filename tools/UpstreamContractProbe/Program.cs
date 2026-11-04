@@ -14,6 +14,23 @@ const BindingFlags allInstance = BindingFlags.Public | BindingFlags.NonPublic | 
 const BindingFlags allStatic = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
 OutputFolder.Publish(output, folder =>
 {
+    // Use the actual upstream serializer, rather than inventing our own calibration fixture.
+    var upstreamCore = AssemblyLoadContext.Default.LoadFromAssemblyPath(Path.Combine(directory, "DiscImageStudio.Core.dll"));
+    var parameterType = upstreamCore.GetType("DiscImageStudio.Core.Calibration.CalibrationParameters", true)!;
+    var kindType = upstreamCore.GetType("DiscImageStudio.Core.Calibration.CalibrationDiscKind", true)!;
+    object parameters = Activator.CreateInstance(parameterType, [Enum.Parse(kindType, "Dvd"), 24.003, 58.006, 2295104L,
+        133.3, .02, -.03, .015, false, 0L, null, 0L])!;
+    var targetType = upstreamCore.GetType("DiscImageStudio.Core.Calibration.CalibrationTarget", true)!;
+    object target = targetType.GetMethod("Create")!.Invoke(null, [parameters, null])!;
+    var observationType = upstreamCore.GetType("DiscImageStudio.Core.Calibration.CalibrationObservation", true)!;
+    object observations = Activator.CreateInstance(typeof(List<>).MakeGenericType(observationType))!;
+    var sessionType = upstreamCore.GetType("DiscImageStudio.Core.Calibration.CalibrationSession", true)!;
+    object session = Activator.CreateInstance(sessionType, [target, observations, null, true, null])!;
+    string calibrationJson = (string)upstreamCore.GetType("DiscImageStudio.Core.Calibration.CalibrationSessionJson", true)!
+        .GetMethod("Serialize")!.Invoke(null, [session])!;
+    File.WriteAllText(Path.Combine(folder, "upstream-calibration.calibration.json"), calibrationJson);
+    var calibration = CalibrationGeneration.Import(System.Text.Encoding.UTF8.GetBytes(calibrationJson), new("DVD+R", 120, 15, 1, null));
+    calibration.ValidateAttachments(_ => System.Text.Encoding.UTF8.GetBytes(calibrationJson));
     string image = Path.Combine(folder, "target_slim.png"); File.WriteAllBytes(image, ReferenceTarget.PngBytes());
     var rasterType = assembly.GetType("DvdImageSolver.Solver.RasterImage", throwOnError: true)!;
     object raster = rasterType.GetMethod("Load", allStatic)!.Invoke(null, [image])!;

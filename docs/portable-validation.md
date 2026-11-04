@@ -6,7 +6,7 @@
 
 `tools/Publish-Portable.ps1` 用 SDK 10.0.203 发布 Release / win-x64 / self-contained，固定 .NET 10.0.7，不裁剪、不合并为单文件。WPF 与 CLI 共用包内运行时；针对 `WindowsBase.dll` 的 Core facade / WPF 实现差异，只允许与两个官方运行时包字节哈希分别匹配的已知冲突，保留 WPF 实现，其余不同文件拒绝合并。
 
-普通 solution 构建仍使用清空源的 `NuGet.Config`。打包首次可用 `-RuntimeSource https://api.nuget.org/v3/index.json` 下载平台运行时包到 `.local/nuget`，不改全局包源。后续直接调用即可离线复用。
+普通 solution 构建使用 `NuGet.Config` 中随源码提供的本地 Math.NET 包源。打包首次可用 `-RuntimeSource https://api.nuget.org/v3/index.json` 下载平台运行时包到 `.local/nuget`，不改全局包源。后续直接调用即可离线复用。
 
 包包含桌面/CLI、运行时许可证、使用说明、CHANGELOG、SHA256 清单与 `source.zip`。对应源码取当前工作区，包含未提交变更，排除 `.git`、缓存、编译产物和验收输出；不会用旧 HEAD 的源码代替当前二进制。`source-files.json` 支持源码归档在没有 Git 元数据时继续枚举构建输入。源码修改后应重新打包，包并不保证跨构建 ZIP 字节相同。
 

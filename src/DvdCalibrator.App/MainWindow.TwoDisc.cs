@@ -13,70 +13,137 @@ public sealed partial class MainWindow
 {
     private TwoDiscTask? twoDisc;
     private readonly TextBox finePixels = new() { Text = "8", Width = 42, Margin = new(3), VerticalContentAlignment = VerticalAlignment.Center,
-        ToolTip = "预计第二张照片的有效像素/mm，是拍摄计划输入。修改后请重新创建计划，现有 G1 不会随文本改动。" };
+        ToolTip = "预计第二张照片的有效像素/mm，用于拍摄清晰度检查。" };
     private readonly TextBlock workflowDetail = new() { Name = "TwoDiscStatus", Margin = new(8, 2, 8, 5), TextWrapping = TextWrapping.Wrap };
-    private Button prepareFine = null!, confirmFine = null!, targetExport = null!, importFine = null!, saveTwoDisc = null!, finalExport = null!;
+    private Button copyFineParameters = null!, copyFinalParameters = null!, updateFineEstimate = null!, replaceFine = null!, importFine = null!, replaceFineRecord = null!, removeFine = null!;
+    private readonly List<TextBox> fineParameterBoxes = [], finalParameterBoxes = [];
     private string? forecastPlanHash;
-    private FrameworkElement BuildTwoDiscToolbar()
+    private (FineTargetPlan Plan, SnapshotBundle Snapshot)? pendingFineRecord;
+    private SnapshotBundle? FineSnapshot => twoDisc?.Fine?.Snapshot ?? pendingFineRecord?.Snapshot;
+
+    private TwoDiscTask PrepareWorkflow(double pixels)
     {
-        var panel = new StackPanel { Margin = new(12, 0, 12, 5) };
-        panel.SetResourceReference(Panel.BackgroundProperty, "WorkflowBackgroundBrush");
-        var actions = new WrapPanel();
-        actions.Children.Add(new TextBlock { Text = "两盘任务 · 预计精调像素/mm", Margin = new(8), VerticalAlignment = VerticalAlignment.Center }); actions.Children.Add(finePixels);
-        prepareFine = Button("创建第二张计划", PrepareFine); actions.Children.Add(prepareFine);
-        confirmFine = Button("确认第二张计划", ConfirmFine); actions.Children.Add(confirmFine);
-        targetExport = Button("导出第二张靶", ExportFineTarget); actions.Children.Add(targetExport);
-        importFine = Button("导入第二张照片", ImportFinePhoto); actions.Children.Add(importFine);
-        actions.Children.Add(Button("查看第一张", () => ShowDisc(false))); actions.Children.Add(Button("查看第二张", () => ShowDisc(true)));
-        actions.Children.Add(Button("打开两盘任务", OpenTwoDisc)); saveTwoDisc = Button("保存两盘任务", SaveTwoDisc); actions.Children.Add(saveTwoDisc);
-        finalExport = Button("导出两盘最终配置", ExportTwoDiscFinal); actions.Children.Add(finalExport);
-        actions.Children.Add(Button("检查两盘一致性", CheckTwoDisc));
-        actions.Children.Add(Button("两盘合成演示", async () => await LoadTwoDiscDemo()));
-        panel.Children.Add(actions); panel.Children.Add(workflowDetail); return panel;
+        var next = twoDisc?.UsesManualParameters == true
+            ? TwoDiscTask.CreateManual(twoDisc.Plan.Disc, twoDisc.Plan.Generated, pixels, FirstPhoto)
+            : TwoDiscTask.Create(FirstPhoto!, pixels);
+        if (next.Plan.Forecast.Status == "plan-review") next.ConfirmPlan();
+        return next;
     }
-    private void PrepareFine()
+
+    private void EnsureFinePreparation()
     {
-        if (task is null || calculation is not null) return;
-        if (draftMask.Count > 0) throw new ArgumentException("请先结束或放弃遮罩草稿。");
-        if (twoDisc is not null && ReferenceEquals(task, twoDisc.Fine)) throw new ArgumentException("请先查看第一张，再创建第二张计划。");
-        if (twoDisc?.Fine is not null && !MayReplace()) return;
+        if (!CoarseReady && twoDisc?.UsesManualParameters != true) return;
+        if (!PlanCurrent)
+        {
+            if (twoDisc?.Fine is not null) return;
+            double pixels = twoDisc?.Plan.ExpectedPhotoPixelsPerMm ?? 8;
+            twoDisc = PrepareWorkflow(pixels); finePixels.Text = pixels.ToString("G17", CultureInfo.InvariantCulture); dirty = true;
+        }
+        else if (!twoDisc!.Plan.IsConfirmed && twoDisc.Plan.Forecast.Status == "plan-review")
+        { twoDisc.ConfirmPlan(); dirty = true; }
+    }
+
+    private void UpdateFineEstimate()
+    {
+        if (calculation is not null || !MaskDraftReady() || (!CoarseReady && twoDisc?.UsesManualParameters != true) || twoDisc?.Fine is not null) return;
         double pixels = double.Parse(finePixels.Text, NumberStyles.Float, CultureInfo.InvariantCulture);
-        twoDisc = TwoDiscTask.Create(task, pixels); dirty = true; Refresh();
-        SetStatus("计划已创建。G1 保存第一张选中候选的全部参数；请对照第一张完整曲线与已导出的预测诊断，核对预计精调照片像素密度，再确认第二张计划。");
+        twoDisc = PrepareWorkflow(pixels); dirty = true; Refresh(); SetStatus("拍摄清晰度检查已更新，粗调参数保持本次测量结果。");
     }
-    private void ConfirmFine()
+
+    private void ReplaceFinePreparation()
     {
-        if (twoDisc is null || calculation is not null || !MaskDraftReady()) return;
-        twoDisc.ConfirmPlan(); dirty = true; Refresh(); SetStatus("第二张 G1 与固定原图契约已确认。导出标靶后用固定版本生成，再冻结真实旁车和原图；导入第二张时逐项核对。实刻仍待验证。");
+        if (calculation is not null || !MaskDraftReady() || !CoarseReady || twoDisc?.Fine is null || PlanCurrent) return;
+        if (MessageBox.Show(this, "第一张粗调结果已经改变。重新准备会解除旧第二张照片及结果的关联，请先保留旧资料。继续？",
+            "重新准备第二张", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) != MessageBoxResult.Yes) return;
+        twoDisc = PrepareWorkflow(twoDisc.Plan.ExpectedPhotoPixelsPerMm); dirty = true; Refresh();
     }
-    private void ExportFineTarget()
+
+    private static (string Label, string Value)[] FineParameterValues(GeometryParameters p)
     {
-        if (twoDisc is null || calculation is not null || !MaskDraftReady()) return;
-        twoDisc.Validate();
-        var dialog = new OpenFolderDialog { Title = "选择父目录，将新建第二张标靶与计划目录" }; if (dialog.ShowDialog() != true) return;
-        string output = Path.Combine(dialog.FolderName, "fine-target-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"));
-        FineTargetExport.Write(output, twoDisc.Plan); SetStatus("已导出固定原图、完整 G1、结构化生成参数和预测报告。生成工作目录为导出目录；先打开 report.html：" + output);
+        string N(double value) => value.ToString("R", CultureInfo.InvariantCulture);
+        return [("内半径 (mm)", N(p.InnerRadiusMm)), ("外半径 (mm)", N(p.OuterRadiusMm)),
+            ("扇区数", p.TotalSectors.ToString(CultureInfo.InvariantCulture)), ("一阶轨距", N(p.PitchLinear)),
+            ("二阶轨距", N(p.PitchQuadratic)), ("三阶轨距", N(p.PitchCubic)), ("位长 (nm)", N(p.ChannelBitLengthNm)),
+            ("螺旋方向", p.Direction == SpiralDirection.Cw ? "顺时针 (CW)" : "逆时针 (CCW)")];
     }
-    private void ImportFinePhoto()
+
+    private void CopyFineParameters()
+    {
+        if (calculation is not null || !PlanCurrent || !twoDisc!.Plan.IsConfirmed || !MaskDraftReady()) return;
+        CopyParameters(twoDisc.Plan.Generated);
+        SetStatus("参数已复制。到 DiscImageStudio 的工程设置填入，再到“标定”页核对内外半径并生成镜像。");
+    }
+    private void CopyFinalParameters()
+    {
+        if (calculation is not null || !FinalReady || !MaskDraftReady()) return;
+        CopyParameters(twoDisc!.Fine!.Fit!.Selected.Parameters);
+        SetStatus("补偿参数已复制。请在 DiscImageStudio 的工程设置中应用。");
+    }
+    private static void CopyParameters(GeometryParameters parameters) =>
+        Clipboard.SetText(string.Join(Environment.NewLine, FineParameterValues(parameters).Select(p => $"{p.Label}: {p.Value}")));
+
+    private static void DisplayParameters(List<TextBox> boxes, GeometryParameters? parameters)
+    {
+        var values = parameters is null ? [] : FineParameterValues(parameters);
+        for (int i = 0; i < boxes.Count; i++) boxes[i].Text = values.Length == 0 ? "" : values[i].Value;
+    }
+    private void ImportFinePhoto(bool chooseGeneration = false)
     {
         if (twoDisc is null || calculation is not null) return;
-        if (!twoDisc.Plan.IsConfirmed) throw new ArgumentException("请先确认第二张计划。");
+        if (!PlanCurrent || !twoDisc.Plan.IsConfirmed) throw new ArgumentException("请先返回第 4 步检查粗调参数和第二张拍摄要求。");
         if (draftMask.Count > 0) throw new ArgumentException("请先结束遮罩草稿。");
-        var generation = new OpenFileDialog { Filter = "第二张冻结生成快照|generation.json;*.json", Title = "选择第二张实际旁车冻结后的 generation.json" };
-        if (generation.ShowDialog() != true) return;
-        var snapshot = SnapshotBundle.Load(generation.FileName);
+        var snapshot = FineSnapshot;
+        if (chooseGeneration || snapshot is null)
+        {
+            var generation = new OpenFileDialog { Filter = "第二张生成记录|generation.json;*.json", Title = "选择第二张 ISO 同目录的 .calibration.json（或 .iso.json）" };
+            if (generation.ShowDialog(this) != true) return;
+            snapshot = SelectGeneration(generation.FileName, fine: true);
+            if (snapshot is null) return;
+        }
         var photo = new OpenFileDialog { Filter = "第二张记录面照片|*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff", Title = "选择对应第二张的原始记录面照片" };
-        if (photo.ShowDialog() != true) return;
-        var next = new PhotoTask(snapshot, PhotoCodec.Import(photo.FileName)); twoDisc.BindFine(next);
-        Load(next, true); SetStatus("已验证第二张生成记录和原图契约。请标第二张外缘/孔缘、确认矫正，再描右侧主十字中心线及对侧 180° 检查线；拟合会使用 G1。");
+        if (photo.ShowDialog(this) != true) return;
+        var next = new PhotoTask(snapshot, PhotoCodec.Import(photo.FileName));
+        if (!MayChangeFinePhoto()) return;
+        try { SetFinePhoto(next); }
+        catch (CalibrationInputException e) when (e.Code == "fine-generation-mismatch")
+        {
+            MessageBox.Show(this, "请确认提交的.json或图片正确\n若再次发生请确定上一页的参数与实际使用参数相符",
+                "无法完成操作", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        SetStatus("第二张生成记录和照片已核对。点击下一步，独立校正第二张照片。");
+    }
+    private bool MayChangeFinePhoto() => MayChangePhoto(twoDisc?.Fine, "更换或移除第二张照片会清除第二张的标注和测量。继续？");
+    private void RemoveFinePhoto()
+    {
+        if (calculation is not null || twoDisc?.Fine is null || !MaskDraftReady() || !MayChangeFinePhoto()) return;
+        SetFinePhoto(null);
+        SetStatus("第二张照片已移除，生成记录已保留。请选择照片。");
+    }
+    private void SetFinePhoto(PhotoTask? next)
+    {
+        var workflow = twoDisc!;
+        if (next is null)
+        {
+            pendingFineRecord = (workflow.Plan, workflow.Fine!.Snapshot);
+            workflow.RemoveFine();
+        }
+        else
+        {
+            workflow.BindFine(next, replaceExisting: true);
+            pendingFineRecord = null;
+        }
+        CurrentStep = CalibrationStep.FineImport;
+        Load(next ?? workflow.Coarse, true, false);
     }
     private void ShowDisc(bool fine)
     {
         if (twoDisc is null || calculation is not null) return;
         if (draftMask.Count > 0) throw new ArgumentException("请先结束或放弃遮罩草稿。");
         var next = fine ? twoDisc.Fine : twoDisc.Coarse;
-        if (next is null) { SetStatus("第二张尚未导入。请先导出标靶、生成并冻结实际旁车，再导入对应照片。"); return; }
-        bool changed = dirty; Load(next, changed); SetStatus(fine ? "当前第二张：使用独立 G1 和本张照片几何。" : "当前第一张：修改观测或候选会使既有第二张计划失效，请另建计划。");
+        if (next is null) { SetStatus("第二张尚未导入。请在原软件填入粗调参数，生成辅助标定盘，再提交生成记录与照片。"); return; }
+        if (ReferenceEquals(task, next)) return;
+        bool changed = dirty; Load(next, changed, false); SetStatus(fine ? "当前第二张：使用本张实际生成参数和独立照片校正。" : "当前第一张：修改粗调结果后，第二张需要使用更新后的参数。");
     }
     private void OpenTwoDisc()
     {
@@ -88,27 +155,54 @@ public sealed partial class MainWindow
     {
         if (twoDisc is null || calculation is not null) return;
         if (draftMask.Count > 0) throw new ArgumentException("请先结束遮罩草稿。");
-        var dialog = new SaveFileDialog { Filter = "两盘标定任务|*.dvdcal", DefaultExt = ".dvdcal", OverwritePrompt = false, FileName = "two-disc-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") };
+        var dialog = new SaveFileDialog { Filter = "标定任务|*.dvdcal", DefaultExt = ".dvdcal", OverwritePrompt = false, FileName = "calibration-task-" + DateTime.Now.ToString("yyyyMMdd-HHmmss") };
         if (dialog.ShowDialog() != true) return;
-        twoDisc.SaveNew(dialog.FileName); dirty = false; Refresh(); SetStatus("两盘任务已保存，包含两张原图、各自生成记录和观测、精调计划及结果，可换目录恢复。");
+        twoDisc.SaveNew(dialog.FileName); dirty = false; Refresh(); SetStatus("任务已保存。下次点“打开任务”可继续。");
     }
-    private void ExportTwoDiscFinal()
+    internal async Task ReviewFinalAsync()
     {
-        if (twoDisc is null || calculation is not null || !MaskDraftReady()) return;
-        var dialog = new OpenFolderDialog { Title = "选择父目录，将新建最终配置与两盘追溯报告" }; if (dialog.ShowDialog() != true) return;
-        string output = Path.Combine(dialog.FolderName, "two-disc-final-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"));
-        twoDisc.ExportFinal(output); SetStatus("已导出第二张最终配置、工程兼容回读和两盘追溯报告；physicalValidation 仍为 pending：" + output);
-    }
-    private void CheckTwoDisc()
-    {
-        if (twoDisc is null || calculation is not null || !MaskDraftReady()) return;
-        var result = twoDisc.CheckConsistency();
-        SetStatus($"两盘形状差 RMS {result.CoarseShapeRmsMm:F4} mm / 最大 {result.CoarseShapeMaximumMm:F4} mm；第二张有效线宽 {result.FineLineWidthPixels:F2} px。"
-            + (result.Status == "final-review" ? "软件一致性检查通过，可导出带两盘来源的最终配置；实刻仍待验证。" : CalibrationGuidance.Describe([CalibrationGuidance.ForCode(result.Status)])));
+        if (calculation is not null || CurrentStep != CalibrationStep.Finish || !StepReady(CurrentStep)
+            || FinalCheckCurrent || !MaskDraftReady()) return;
+        var workflow = twoDisc!;
+        var coarse = workflow.Coarse?.Session;
+        var coarseResult = CoarseResult;
+        var fine = workflow.Fine!.Session;
+        var fit = workflow.Fine.Fit;
+        var plan = workflow.Plan.ContentSha256;
+        calculation = new(); var token = calculation.Token; Refresh();
+        SetStatus("正在检查补偿结果……");
+        TwoDiscConsistency? consistency = null;
+        double? lineWidth = null;
+        string? issue = null;
+        try
+        {
+            if (workflow.UsesManualParameters)
+                lineWidth = await Task.Run(() => workflow.CheckFinePhotoLineWidth(token), token);
+            else
+                consistency = await Task.Run(() => workflow.CheckConsistency(token), token);
+            token.ThrowIfCancellationRequested();
+        }
+        catch (OperationCanceledException)
+        {
+            SetStatus("检查已取消。重新打开第 08 步可再次检查。");
+            return;
+        }
+        catch (Exception e) when (Expected(e)) { issue = CalibrationGuidance.Describe(e); }
+        finally
+        {
+            if (!token.IsCancellationRequested && (consistency is not null || lineWidth is not null || issue is not null))
+            {
+                checkedWorkflow = workflow; checkedCoarseSession = coarse; checkedCoarseResult = coarseResult;
+                checkedFineSession = fine; checkedFineFit = fit; checkedPlan = plan;
+                checkedConsistency = consistency; checkedFineWidth = lineWidth; finalCheckIssue = issue;
+            }
+            calculation.Dispose(); calculation = null; Refresh();
+            if (FinalCheckCurrent) SetStatus(FinalReady ? "补偿参数已准备好。" : resultSummary.Text);
+        }
     }
     public void LoadTwoDiscTask(TwoDiscTask next)
     {
-        next.Validate(); twoDisc = next; finePixels.Text = next.Plan.ExpectedPhotoPixelsPerMm.ToString("G17", CultureInfo.InvariantCulture);
+        next.Validate(); twoDisc = next; pendingFineRecord = null; finePixels.Text = next.Plan.ExpectedPhotoPixelsPerMm.ToString("G17", CultureInfo.InvariantCulture);
         Load(next.Fine ?? next.Coarse, false);
     }
     public async Task LoadTwoDiscDemo()
@@ -119,7 +213,7 @@ public sealed partial class MainWindow
         {
             var next = await Task.Run(() => SyntheticPhoto.CreateTwoDiscDemo(token), token);
             token.ThrowIfCancellationRequested(); LoadTwoDiscTask(next); dirty = true;
-            SetStatus("两盘软件演示：第一张粗调与 G1 计划已模拟确认，第二张使用固定 target_slim 原图和独立照片。点击“拟合描线”，核对并确认候选后可导出两盘最终配置。");
+            SetStatus("两盘软件演示：拟合并确认第二张曲线后，可在第 08 步查看补偿参数。");
         }
         catch (OperationCanceledException) { SetStatus("两盘演示创建已取消，原有任务保留。"); }
         catch (Exception e) when (Expected(e)) { SetStatus(CalibrationGuidance.Describe(e)); }
@@ -127,17 +221,19 @@ public sealed partial class MainWindow
     }
     private void RefreshTwoDisc()
     {
+        if (pendingFineRecord is { } pending && !ReferenceEquals(pending.Plan, twoDisc?.Plan)) pendingFineRecord = null;
         bool busy = calculation is not null;
-        prepareFine.IsEnabled = task?.Session.IsConfirmed == true && !busy;
-        confirmFine.IsEnabled = twoDisc is not null && !twoDisc.Plan.IsConfirmed && twoDisc.Plan.Forecast.Status == "plan-review" && !busy;
-        targetExport.IsEnabled = importFine.IsEnabled = twoDisc?.Plan.IsConfirmed == true && !busy;
-        saveTwoDisc.IsEnabled = twoDisc is not null && !busy; finalExport.IsEnabled = twoDisc?.Fine?.Fit?.IsConfirmed == true && !busy;
-        finePixels.IsEnabled = !busy;
+        copyFineParameters.IsEnabled = !busy && draftMask.Count == 0 && PlanCurrent && twoDisc?.Plan.IsConfirmed == true;
+        updateFineEstimate.IsEnabled = !busy && draftMask.Count == 0 && (CoarseReady || twoDisc?.UsesManualParameters == true) && twoDisc?.Fine is null;
+        replaceFine.Visibility = twoDisc?.Fine is not null && !PlanCurrent && CoarseReady ? Visibility.Visible : Visibility.Collapsed;
+        replaceFine.IsEnabled = !busy && draftMask.Count == 0;
+        finePixels.IsEnabled = !busy && twoDisc?.Fine is null;
+        DisplayParameters(fineParameterBoxes, PlanCurrent ? twoDisc!.Plan.Generated : null);
         if (twoDisc is null) { workflowDetail.Text = "先完成第一张描线确认或密环分析；预计像素/mm 是第二张拍摄计划输入，尚非实测值。"; fineForecastImage.Source = null; forecastPlanHash = null; return; }
         var plan = twoDisc.Plan; string state = twoDisc.Status switch
         {
-            "plan-review" => "核对并确认第二张计划", "awaiting-fine-photo" => "等待第二张实际生成记录与照片",
-            "fine-annotation" => "第二张标注 / 独立精调", "fine-fit-review" => "核对第二张候选", _ => "可检查两盘一致性并导出"
+            "plan-review" => "第二张拍摄要求尚未通过检查", "awaiting-fine-photo" => "等待第二张实际生成记录与照片",
+            "fine-annotation" => "第二张标注 / 独立精调", "fine-fit-review" => "核对第二张候选", _ => "可查看补偿参数"
         };
         if (forecastPlanHash != plan.ContentSha256)
         {
@@ -164,16 +260,14 @@ public sealed partial class MainWindow
             }
             drawing.Freeze(); fineForecastImage.Source = new DrawingImage(drawing); forecastPlanHash = plan.ContentSha256;
         }
-        workflowDetail.Text = $"{(twoDisc.EvidenceMode == "simulation" ? "软件模拟 · " : "实际记录流程 · ")}{state} · 当前{(ReferenceEquals(task, twoDisc.Fine) ? "第二张 G1" : "第一张 G0")}\n"
+        string source = twoDisc.EvidenceMode switch { "simulation" => "软件模拟", "manual-parameters" => "手动参数", _ => "第一张实测参数" };
+        string currentDisc = ReferenceEquals(task, twoDisc.Fine) && task is not null ? " · 当前第二张 G1" : "";
+        workflowDetail.Text = $"{source} · {state}{currentDisc}\n"
             + $"G1 ri {plan.Generated.InnerRadiusMm:F6} / ro {plan.Generated.OuterRadiusMm:F6} mm · 候选差 {plan.Forecast.MaximumCandidateDifferenceMm:F3} mm · 预计线宽 {plan.Forecast.MinimumLineWidthPixels:F1} px · 实刻待验证。";
         if (plan.Forecast.Status != "plan-review") workflowDetail.Text += " " + CalibrationGuidance.Describe([CalibrationGuidance.ForCode(plan.Forecast.Status)]);
-        bool current = RecordJson.Hash(twoDisc.Coarse.Session) == plan.Coarse.SessionSha256
-            && (plan.Coarse.Kind == "trace" ? twoDisc.Coarse.Fit is not null && RecordJson.Hash(twoDisc.Coarse.Fit) == plan.Coarse.ResultSha256
-                : twoDisc.Coarse.Dense is not null && RecordJson.Hash(twoDisc.Coarse.Dense) == plan.Coarse.ResultSha256);
-        if (!current)
+        if (!PlanCurrent)
         {
-            workflowDetail.Text += " 第一张已改变，请重新创建计划。";
-            confirmFine.IsEnabled = targetExport.IsEnabled = importFine.IsEnabled = saveTwoDisc.IsEnabled = finalExport.IsEnabled = false;
+            workflowDetail.Text += " 第一张已改变，请使用更新后的粗调参数重新制作第二张。";
         }
     }
 }

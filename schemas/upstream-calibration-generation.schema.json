@@ -1,0 +1,114 @@
+{
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer"
+    },
+    "recordType": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "disc": {
+      "type": "object",
+      "properties": {
+        "mediaType": {
+          "type": "string"
+        },
+        "diameterMm": {
+          "type": "number"
+        },
+        "holeDiameterMm": {
+          "type": "number"
+        },
+        "layers": {
+          "type": "integer"
+        },
+        "mid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "mediaType",
+        "diameterMm",
+        "holeDiameterMm",
+        "layers",
+        "mid"
+      ],
+      "additionalProperties": false
+    },
+    "generated": {
+      "type": "object",
+      "properties": {
+        "innerRadiusMm": {
+          "type": "number"
+        },
+        "outerRadiusMm": {
+          "type": "number"
+        },
+        "totalSectors": {
+          "type": "integer"
+        },
+        "channelBitLengthNm": {
+          "type": "number"
+        },
+        "pitchLinear": {
+          "type": "number"
+        },
+        "pitchQuadratic": {
+          "type": "number"
+        },
+        "pitchCubic": {
+          "type": "number"
+        },
+        "direction": {
+          "enum": [
+            "cw",
+            "ccw"
+          ]
+        },
+        "directionConvention": {
+          "type": "string"
+        },
+        "startLba": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "innerRadiusMm",
+        "outerRadiusMm",
+        "totalSectors",
+        "channelBitLengthNm",
+        "pitchLinear",
+        "pitchQuadratic",
+        "pitchCubic",
+        "direction",
+        "directionConvention",
+        "startLba"
+      ],
+      "additionalProperties": false
+    },
+    "sourceSha256": {
+      "type": "string"
+    },
+    "contentSha256": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "recordType",
+    "id",
+    "disc",
+    "generated",
+    "sourceSha256",
+    "contentSha256"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:dvd-calibrator:upstream-calibration-generation:v1"
+}

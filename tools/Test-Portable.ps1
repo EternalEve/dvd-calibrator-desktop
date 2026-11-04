@@ -37,6 +37,13 @@ function Assert-Payload {
     foreach ($file in $actual) { if (-not $seen.Contains($file.FullName)) { throw 'Unlisted payload path.' } }
 }
 Assert-Payload
+$guide = Get-Content -LiteralPath (Join-Path $package '新手教程.html') -Raw
+$guideIds = @([regex]::Matches($guide, 'id="([^"]+)"') | ForEach-Object { $_.Groups[1].Value })
+if (@($guideIds | Select-Object -Unique).Count -ne $guideIds.Count) { throw 'Offline tutorial contains duplicate anchors.' }
+foreach ($section in @('materials') + @(1..8 | ForEach-Object { 'step-' + $_ })) {
+    if (-not $guide.Contains('id="' + $section + '"')) { throw "Offline tutorial section missing: $section" }
+}
+if ((Get-FileHash -LiteralPath (Join-Path $package '标定原图/target_slim.png')).Hash.ToLowerInvariant() -ne 'c98ffe87db7cf9c3f132352814e1ce611c44f704de5b7212da4083188257c829') { throw 'Beginner reference image differs from the pinned original.' }
 foreach ($executable in @($manifest.desktopExecutable, $manifest.cliExecutable)) {
     if (-not @($manifest.files.path).Contains($executable) -or [IO.Path]::GetFileName($executable) -ne $executable -or -not $executable.EndsWith('.exe')) { throw 'Invalid package executable.' }
 }
@@ -61,7 +68,7 @@ function Invoke-Packaged([string]$Executable, [string[]]$Arguments, [int]$Expect
 $appOutput = Join-Path $Out '桌面 软件自检'
 $null = Invoke-Packaged $manifest.desktopExecutable @('--verify-installation', '--out', $appOutput)
 $installation = Get-Content -LiteralPath (Join-Path $appOutput 'installation-check.json') -Raw | ConvertFrom-Json
-if ($installation.status -ne 'passed' -or -not $installation.localCoreRuntime -or -not $installation.localWpfRuntime -or $installation.architecture -ne 'X64') { throw 'Bundled runtime was not used.' }
+if ($installation.status -ne 'passed' -or $installation.wfrRestore -ne 'passed' -or -not $installation.localCoreRuntime -or -not $installation.localWpfRuntime -or $installation.architecture -ne 'X64') { throw 'Bundled runtime or WFR validation failed.' }
 $null = Invoke-Packaged $manifest.desktopExecutable @('--verify-installation', '--out', $appOutput) 2
 $null = Invoke-Packaged $manifest.desktopExecutable @('--verify-installation') 2
 $demo = Join-Path $Out '命令行 示例'
@@ -79,7 +86,7 @@ $result = Get-Content -LiteralPath (Join-Path $profile 'calibration-profile.json
 if ($result.physicalValidation -ne 'pending' -or -not (Test-Path -LiteralPath (Join-Path $profile 'candidate.discproj'))) { throw 'Packaged profile export failed.' }
 $sourceZip = [IO.Compression.ZipFile]::OpenRead((Join-Path $package 'source.zip'))
 try {
-    foreach ($required in @('LICENSE', 'global.json', 'NuGet.Config', 'src/DvdCalibrator.App/InstallationCheck.cs', 'tools/Publish-Portable.ps1', 'upstream.lock.json')) {
+    foreach ($required in @('LICENSE', 'global.json', 'NuGet.Config', 'src/DvdCalibrator.App/InstallationCheck.cs', 'src/DvdCalibrator.App/MainWindow.Wizard.cs', 'src/DvdCalibrator.App/MainWindow.Guidance.cs', 'docs/guided-workflow.md', 'docs/material-preparation.md', 'docs/beginner-guide.html', 'tools/Render-BeginnerGuide.ps1', 'tools/Publish-Portable.ps1', 'upstream.lock.json', 'third_party/MathNet/mathnet.numerics.5.0.0.nupkg', 'third_party/MathNet/LICENSE.md', 'third_party/pyGPA/geometric_phase_analysis.py', 'third_party/pyGPA/LICENSE', 'src/DvdCalibrator.Core/WindowedFourierRidges.cs', 'fixtures/pygpa-wfr-oracle.json')) {
         if ($null -eq $sourceZip.GetEntry($required)) { throw "Corresponding source missing: $required" }
     }
 } finally { $sourceZip.Dispose() }
@@ -87,7 +94,8 @@ Assert-Payload
 $report = [ordered]@{
     schemaVersion = 1; recordType = 'portable-verification'; status = 'passed'; archiveSha256 = $hash; version = $manifest.version
     relocatedToChineseSpacePath = $true; isolatedDotnetRoot = $true; localCoreRuntime = $installation.localCoreRuntime; localWpfRuntime = $installation.localWpfRuntime
-    singleDiscRestore = 'passed'; twoDiscRestore = 'passed'; finalExport = 'passed'; cliWorkflow = 'passed'; sourceArchive = 'present'; payloadUnchanged = $true
+    singleDiscRestore = 'passed'; twoDiscRestore = 'passed'; wfrRestore = 'passed'; finalExport = 'passed'; cliWorkflow = 'passed'; sourceArchive = 'present'; payloadUnchanged = $true
+    offlineGuide = 'all-eight-steps-and-materials'; referenceTarget = 'exact-pinned-png'
     cleanMachine = 'pending'; nativeInteraction = 'pending'; physicalValidation = 'pending'
 }
 $report | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $Out 'portable-verification.json') -Encoding utf8NoBOM

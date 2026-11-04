@@ -64,6 +64,8 @@ internal static class ReferenceTargetChecks
             var snapshot = ExternalGenerationSnapshot.CreateInFolder(Path.Combine(root, "fixtures/upstream-reference-fast-fill.iso.json"), png,
                 new(plan.Disc, 16, "1.3.6", DiscImageRecord.UpstreamCommit, "user-declared"), frozen);
             plan.VerifyActualGeneration(snapshot, name => File.ReadAllBytes(Path.Combine(frozen, name)));
+            var unspecifiedDiscPlan = FineTargetPlan.Create(DiscSpec.UnspecifiedDvd, e, 8).Confirm();
+            unspecifiedDiscPlan.VerifyActualGeneration(snapshot, name => File.ReadAllBytes(Path.Combine(frozen, name)));
             RecordJson.WriteNew(Path.Combine(frozen, "generation.json"), snapshot);
             var mismatchedPlan = FineTargetPlan.Create(plan.Disc, e with { Parameters = record.Generated with { OuterRadiusMm = record.Generated.OuterRadiusMm + .001 },
                 Alternatives = [new("candidate-1", record.Generated with { OuterRadiusMm = record.Generated.OuterRadiusMm + .001 })] }, 8).Confirm();

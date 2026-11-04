@@ -6,16 +6,21 @@ namespace DvdCalibrator.Core;
 
 public static class DenseExport
 {
-    public static void Write(string path, DenseAnalysis analysis, GenerationSnapshot snapshot, PhotoSession session,
+    public static void Write(string path, DenseAnalysis analysis, IHalfDiscGeneration snapshot, PhotoSession session,
         RgbImage image, CancellationToken token = default)
     {
         analysis.Verify(snapshot, session, image, token);
         OutputFolder.Publish(path, folder =>
         {
             RecordJson.WriteNew(Path.Combine(folder, "dense-analysis.json"), analysis);
-            RecordJson.WriteNew(Path.Combine(folder, "generation.json"), snapshot);
+            if (analysis.Wfr is not null) RecordJson.WriteNew(Path.Combine(folder, "wfr-observations.json"), analysis.Wfr);
+            foreach (var (name, bytes) in snapshot.ExportFiles())
+            {
+                string asset = Path.Combine(folder, name); Directory.CreateDirectory(Path.GetDirectoryName(asset)!);
+                File.WriteAllBytes(asset, bytes);
+            }
             RecordJson.WriteNew(Path.Combine(folder, "photo-session.json"), session);
-            var csv = new StringBuilder("radius_mm,spectral_cycles_per_mm,signed_phase_cycles_per_mm,spectral_concentration,effective_pixels_per_cycle\n");
+            var csv = new StringBuilder("radius_mm,spectral_cycles_per_mm," + (analysis.Wfr is null ? "signed_phase_cycles_per_mm" : "positive_carrier_cycles_per_mm") + ",spectral_concentration,effective_pixels_per_cycle\n");
             foreach (var f in analysis.Observations.Frequencies)
                 csv.AppendLine(string.Join(',', new[] { f.RadiusMm, f.CyclesPerMm, f.SignedPhaseCyclesPerMm, f.SpectralConcentration, f.EffectivePixelsPerCycle }.Select(N)));
             File.WriteAllText(Path.Combine(folder, "local-frequency.csv"), csv.ToString());
@@ -28,16 +33,17 @@ public static class DenseExport
     public static string CurveSvg(DenseAnalysis result, bool next)
     {
         var svg = new StringBuilder("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 700 760\"><rect width=\"700\" height=\"760\" fill=\"#f5f7fb\"/><g fill=\"none\" stroke=\"#aab4c3\"><circle cx=\"350\" cy=\"350\" r=\"300\"/><circle cx=\"350\" cy=\"350\" r=\"37.5\"/></g>");
-        var curves = next ? result.NextDisc?.Curves.Select(c => (c.CandidateId, c.Curve)) ?? []
-            : result.Candidates.Where(c => c.Supported).Select(c => (c.Id, c.Curve));
+        var curves = next ? result.NextDisc?.Curves.Select(c => (c.CandidateId, Points: (IEnumerable<TraceCurvePoint>)c.Curve)) ?? []
+            : result.Candidates.Where(c => c.Supported).Select(c => (c.Id, Points: result.Wfr is null ? c.Curve : WfrAnalyzer.DisplayCurve(c)));
         int index = 0; string[] colors = ["#ea8a23", "#3678bc", "#49946b", "#a86cc1"];
-        foreach (var (_, points) in curves)
+        foreach (var (candidateId, points) in curves)
         {
+            var center = next ? null : result.Wfr?.Centers.FirstOrDefault(c => c.CandidateId == candidateId);
             if (points.Zip(points.Skip(1)).Any(p => Math.Abs(p.First.AngleRadians - p.Second.AngleRadians) > Math.PI / 8)) continue;
             foreach (double offset in next ? new[] { 0d, Math.PI / 2, Math.PI, 3 * Math.PI / 2 } : new[] { 0d, Math.PI })
             {
                 svg.Append($"<polyline fill=\"none\" stroke=\"{colors[index % colors.Length]}\" stroke-width=\"1.5\" points=\"");
-                foreach (var p in points) svg.Append(N(350 + 5 * p.RadiusMm * Math.Cos(p.AngleRadians + offset))).Append(',').Append(N(350 - 5 * p.RadiusMm * Math.Sin(p.AngleRadians + offset))).Append(' ');
+                foreach (var p in points) svg.Append(N(350 + 5 * (p.RadiusMm * Math.Cos(p.AngleRadians + offset) - (center?.XMm ?? 0)))).Append(',').Append(N(350 - 5 * (p.RadiusMm * Math.Sin(p.AngleRadians + offset) - (center?.YMm ?? 0)))).Append(' ');
                 svg.Append("\"/>");
             }
             index++;
@@ -52,11 +58,12 @@ public static class DenseExport
         var html = new StringBuilder("<!doctype html><html lang=\"zh-CN\"><meta charset=\"utf-8\"><title>密环与混合观测诊断</title><style>body{font:16px system-ui;max-width:1100px;margin:40px auto;padding:0 24px;color:#203047}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd5e0;padding:8px}img{max-width:48%}code{overflow-wrap:anywhere}</style><h1>密环与混合观测诊断</h1>");
         html.Append("<p>状态：").Append(WebUtility.HtmlEncode(a.QualityStatus)).Append("；实刻验证 pending。当前结果供核对，不直接授权制作第二张盘。</p><p>算法：").Append(a.AlgorithmVersion)
             .Append("；相位片段 ").Append(a.Observations.Fragments.Length).Append("；可用径向比例 ").Append(N(a.Observations.UsableRadialFraction)).Append("；原图有效像素/mm ").Append(N(a.Observations.SourcePixelsPerMm))
-            .Append("。</p><p>偶数角度提取相位并拟合；奇数角度与每片段末侧连续 25% 留出检查。亮度偏置/增益仅在训练像素拟合，每片段一致；每片段只保留一个整圈分支。</p>")
+            .Append(a.Wfr is null ? "。</p><p>偶数角度提取相位并拟合；奇数角度与每片段末侧连续 25% 留出检查。亮度偏置/增益仅在训练像素拟合，每片段一致；每片段只保留一个整圈分支。</p>"
+                : "。</p><p>复用 pyGPA WFR 局部频率与相位提取，Math.NET 执行 FFT 和优化。训练角度、检查角度及外侧 25% 径向检查区分别滤波；低调制度、遮罩及欠采样区域不用于拟合。WFR 图像误差列为法向距离 RMS（mm）。照片中心偏移受轮廓误差约束，仅用于本张照片配准，不写入补偿参数。原始 WFR 观测见 wfr-observations.json。</p>")
             .Append("<table><tr><th>候选</th><th>完整参数</th><th>相位 RMS 训练/留出 rad</th><th>图像误差 训练/留出</th><th>诊断</th></tr>");
         foreach (var c in a.Candidates)
         {
-            html.Append("<tr><td>").Append(c.Id).Append("<br>极性 ").Append(c.Polarity).Append("</td><td><code>")
+            html.Append("<tr><td>").Append(c.Id).Append(a.Wfr is null ? "<br>极性 " : "<br>相位走向 ").Append(c.Polarity).Append("</td><td><code>")
                 .Append(WebUtility.HtmlEncode(System.Text.Json.JsonSerializer.Serialize(c.Parameters, RecordJson.Options)))
                 .Append("</code></td><td>").Append(N(c.TrainingPhaseRmsRadians)).Append(" / ").Append(N(c.HoldoutPhaseRmsRadians))
                 .Append("</td><td>").Append(N(c.TrainingImageError)).Append(" / ").Append(N(c.HoldoutImageError)).Append("</td><td>")
