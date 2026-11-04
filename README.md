@@ -2,6 +2,8 @@
 
 从 DVD 记录面的照片估算刻录几何补偿参数，用于 [DiscImageStudio](https://github.com/JiaFeiMiao-K-Cat/DiscImageStudio) 的后续图像刻录。支持 **12 cm 单层 DVD-R 和 DVD+R**，通过 Windows 桌面向导完成照片校正、粗调和精调。
 
+本项目源自我在 DiscImageStudio 分享的两盘标定教程，将黑白半盘粗调和十字标靶精调做成了配套桌面工具。[原始教程 · DiscImageStudio Issue #49](https://github.com/JiaFeiMiao-K-Cat/DiscImageStudio/issues/49)
+
 [GitHub Releases](https://github.com/EternalEve/dvd-calibrator-desktop/releases) · [分步教程](docs/guided-workflow.md) · [更新记录](CHANGELOG.md)
 
 ## 开始使用
