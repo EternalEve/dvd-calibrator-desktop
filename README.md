@@ -46,6 +46,14 @@ dotnet run --project src/DvdCalibrator.App -c Release
 - [架构与坐标约定](docs/architecture.md)和[数据契约](docs/data-contracts.md)
 - [GitHub Issues](https://github.com/EternalEve/dvd-calibrator-desktop/issues)
 
+## 实机测试
+
+![粗调盘](docs/example1step1.jpg)
+![粗调盘分析结果](docs/example1step1analyze.jpg)
+![精调盘](docs/example1step2.jpg)
+![精调盘分析结果](docs/example1step2analyze.jpg)
+![最终成品测试](docs/example1final.jpg)
+
 ## 许可证
 
 [GPL-3.0-or-later](LICENSE)。依赖和上游代码的授权见[第三方声明](THIRD-PARTY-NOTICES.md)。
